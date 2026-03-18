@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     console.log("[AUTH] User created:", newUser.email);
 
     // Send welcome email
-    await sendWelcomeEmail(newUser.email, newUser.name);
+    await sendWelcomeEmail(newUser.email, newUser.name ?? undefined);
 
     // Create session
     const sessionToken = await createSession(newUser.id);

@@ -24,7 +24,7 @@ echo ""
 
 # Run migrations
 echo "🔧 Running database migrations..."
-npm run db:migrate
+pnpm run db:migrate
 if [ $? -ne 0 ]; then
     echo "❌ Migration failed!"
     exit 1
@@ -34,7 +34,7 @@ echo ""
 
 # Run seed
 echo "🌱 Seeding database with sample data..."
-npm run db:seed
+pnpm run db:seed
 if [ $? -ne 0 ]; then
     echo "❌ Seeding failed!"
     exit 1
@@ -46,7 +46,7 @@ echo "✅ Setup completed successfully!"
 echo ""
 echo "Next steps:"
 echo "1. Review your .env.local configuration"
-echo "2. Run 'npm run dev' to start the development server"
+echo "2. Run 'pnpm run dev' to start the development server"
 echo "3. Visit http://localhost:3000 to access the dashboard"
 echo ""
 echo "Default test users will be created during seeding."

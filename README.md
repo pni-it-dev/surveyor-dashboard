@@ -64,7 +64,7 @@ A professional, modern dashboard for demographic and trade area analysis with in
 
    ```env
    # Database (PostgreSQL connection string)
-   DATABASE_URL="postgresql://user:password@localhost:5432/trade_area_db"
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trade_area_db"
 
    # Email Service (Optional - for password reset emails)
    SMTP_HOST="smtp.gmail.com"

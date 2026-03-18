@@ -111,9 +111,9 @@ async function seedCity(cityData: CityData) {
       .values({
         name: cityData.name,
         address: cityData.address,
-        latitude: cityData.latitude.toString() as any,
-        longitude: cityData.longitude.toString() as any,
-        geojsonData: cityData.geojson as any,
+        latitude: cityData.latitude,
+        longitude: cityData.longitude,
+        geojsonData: cityData.geojson,
       })
       .returning();
 
@@ -124,13 +124,13 @@ async function seedCity(cityData: CityData) {
     const totalHouseholds = Math.floor(totalPopulation / 4);
     const avgHouseholdSize = (totalPopulation / totalHouseholds).toFixed(2);
 
-    const [demo] = await db
+    await db
       .insert(demographics)
       .values({
         cityId: newCity.id,
         totalPopulation,
         totalHouseholds,
-        avgHouseholdSize: avgHouseholdSize as any,
+        avgHouseholdSize: Number(avgHouseholdSize),
       })
       .returning();
 
@@ -193,7 +193,7 @@ async function seedCity(cityData: CityData) {
         cityId: newCity.id,
         occupation: job.name,
         count,
-        percentage: job.percentage as any,
+        percentage: job.percentage,
       });
     }
 
@@ -223,7 +223,7 @@ async function seedCity(cityData: CityData) {
         ageGroup: ag.group,
         generation: ag.generation,
         count,
-        percentage: ag.percentage as any,
+        percentage: ag.percentage,
       });
     }
 
@@ -242,7 +242,7 @@ async function seedCity(cityData: CityData) {
         cityId: newCity.id,
         category: se.category,
         value,
-        percentage: se.percentage as any,
+        percentage: se.percentage,
       });
     }
 
@@ -261,7 +261,7 @@ async function seedCity(cityData: CityData) {
         cityId: newCity.id,
         incomeRange: income.range,
         count,
-        percentage: income.percentage as any,
+        percentage: income.percentage,
       });
     }
 
@@ -278,8 +278,8 @@ async function seedCity(cityData: CityData) {
       await db.insert(foodExpenditureData).values({
         cityId: newCity.id,
         category: fe.category,
-        amount: fe.amount as any,
-        percentage: fe.percentage as any,
+        amount: fe.amount,
+        percentage: fe.percentage,
       });
     }
 
