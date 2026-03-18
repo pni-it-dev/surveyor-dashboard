@@ -2,13 +2,15 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const DEFAULT_DATABASE_URL =
-  "postgresql://postgres:postgres@localhost:5432/trade_area_db";
+  "postgresql://postgres:postgres@localhost:5432/postgres";
 
 async function main() {
   const connectionString =
     process.env.DATABASE_URL?.trim() || DEFAULT_DATABASE_URL;
   const runtimeRequire = eval("require") as NodeJS.Require;
-  const { Client } = runtimeRequire("pg") as { Client: new (...args: any[]) => any };
+  const { Client } = runtimeRequire("pg") as {
+    Client: new (...args: any[]) => any;
+  };
 
   const migrationPath = path.join(process.cwd(), "scripts", "migrate.sql");
   const sql = await fs.readFile(migrationPath, "utf8");

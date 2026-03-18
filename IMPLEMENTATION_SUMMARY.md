@@ -306,7 +306,7 @@ Enhanced Drizzle ORM setup with:
 ### Environment Variables Required
 
 ```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/trade_area_db
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 SMTP_HOST=smtp.gmail.com (optional, for password reset)
 SMTP_PORT=587 (optional)

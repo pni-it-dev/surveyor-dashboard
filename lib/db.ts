@@ -4,7 +4,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
 const DEFAULT_DATABASE_URL =
-  "postgresql://postgres:postgres@localhost:5432/trade_area_db";
+  "postgresql://postgres:postgres@localhost:5432/postgres";
 
 type AppDatabase = NodePgDatabase<typeof schema>;
 
@@ -34,7 +34,9 @@ function createUnavailableDb(error: Error): AppDatabase {
 
 function createDb(): AppDatabase {
   if (typeof window !== "undefined") {
-    const error = new Error("Database client cannot be created in the browser.");
+    const error = new Error(
+      "Database client cannot be created in the browser.",
+    );
     dbInitError = error;
     globalForDb.__tradeAreaDbInitError = error;
     return createUnavailableDb(error);
@@ -45,7 +47,9 @@ function createDb(): AppDatabase {
 
   try {
     const runtimeRequire = eval("require") as NodeJS.Require;
-    const { Pool } = runtimeRequire("pg") as { Pool: new (...args: any[]) => any };
+    const { Pool } = runtimeRequire("pg") as {
+      Pool: new (...args: any[]) => any;
+    };
 
     const pool = new Pool({
       connectionString,

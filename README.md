@@ -64,7 +64,7 @@ A professional, modern dashboard for demographic and trade area analysis with in
 
    ```env
    # Database (PostgreSQL connection string)
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/trade_area_db"
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
 
    # Email Service (Optional - for password reset emails)
    SMTP_HOST="smtp.gmail.com"
@@ -321,7 +321,7 @@ psql $DATABASE_URL -c "SELECT NOW();"
 
 ```bash
 # Check database exists
-psql postgres -c "CREATE DATABASE trade_area_db;"
+psql postgres -c "CREATE DATABASE postgres;"
 
 # Re-run migration
 pnpm run db:migrate
