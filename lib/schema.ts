@@ -1,207 +1,207 @@
 import {
-  sqliteTable as table,
-  integer,
-  text,
-  real,
-  blob,
   index,
-} from 'drizzle-orm/sqlite-core';
+  integer,
+  jsonb,
+  pgTable,
+  real,
+  serial,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 // Users table
-export const users = table(
-  'users',
+export const users = pgTable(
+  "users",
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    email: text('email').notNull().unique(),
-    password: text('password').notNull(),
-    name: text('name'),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
+    id: serial("id").primaryKey(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    password: varchar("password", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }),
+    createdAt: timestamp("created_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow(),
   },
   (table) => ({
-    emailIdx: index('users_email_idx').on(table.email),
-  })
+    emailIdx: index("users_email_idx").on(table.email),
+  }),
 );
 
 // Password reset tokens
-export const passwordResetTokens = table(
-  'password_reset_tokens',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    token: text('token').notNull().unique(),
-    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Sessions (for cookie-based auth)
-export const sessions = table(
-  'sessions',
+export const sessions = pgTable(
+  "sessions",
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    sessionToken: text('session_token').notNull().unique(),
-    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    sessionTokenIdx: index('sessions_token_idx').on(table.sessionToken),
-  })
+    sessionTokenIdx: index("sessions_token_idx").on(table.sessionToken),
+  }),
 );
 
 // Cities
-export const cities = table(
-  'cities',
+export const cities = pgTable(
+  "cities",
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    name: text('name').notNull().unique(),
-    address: text('address').notNull(),
-    latitude: real('latitude').notNull(),
-    longitude: real('longitude').notNull(),
-    geojsonData: text('geojson_data').notNull(), // GeoJSON stored as JSON string
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull().unique(),
+    address: varchar("address", { length: 255 }).notNull(),
+    latitude: real("latitude").notNull(),
+    longitude: real("longitude").notNull(),
+    geojsonData: jsonb("geojson_data").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    nameIdx: index('cities_name_idx').on(table.name),
-  })
+    nameIdx: index("cities_name_idx").on(table.name),
+  }),
 );
 
 // Demographics base data
-export const demographics = table(
-  'demographics',
+export const demographics = pgTable(
+  "demographics",
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    totalPopulation: integer('total_population').notNull(),
-    totalHouseholds: integer('total_households').notNull(),
-    avgHouseholdSize: real('avg_household_size').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
+    id: serial("id").primaryKey(),
+    cityId: integer("city_id")
+      .notNull()
+      .references(() => cities.id, { onDelete: "cascade" }),
+    totalPopulation: integer("total_population").notNull(),
+    totalHouseholds: integer("total_households").notNull(),
+    avgHouseholdSize: real("avg_household_size").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    cityIdIdx: index('demographics_city_idx').on(table.cityId),
-  })
+    cityIdIdx: index("demographics_city_idx").on(table.cityId),
+  }),
 );
 
 // Gender breakdown
-export const genderBreakdown = table(
-  'gender_breakdown',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    male: integer('male').notNull(),
-    female: integer('female').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const genderBreakdown = pgTable("gender_breakdown", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  male: integer("male").notNull(),
+  female: integer("female").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Marital status breakdown
-export const maritalStatusBreakdown = table(
-  'marital_status_breakdown',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    married: integer('married').notNull(),
-    single: integer('single').notNull(),
-    widow: integer('widow').notNull(),
-    divorced: integer('divorced').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const maritalStatusBreakdown = pgTable("marital_status_breakdown", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  married: integer("married").notNull(),
+  single: integer("single").notNull(),
+  widow: integer("widow").notNull(),
+  divorced: integer("divorced").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Occupation status breakdown
-export const occupationStatusBreakdown = table(
-  'occupation_status_breakdown',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    employed: integer('employed').notNull(),
-    unemployed: integer('unemployed').notNull(),
-    student: integer('student').notNull(),
-    retired: integer('retired').notNull(),
-    other: integer('other').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const occupationStatusBreakdown = pgTable("occupation_status_breakdown", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  employed: integer("employed").notNull(),
+  unemployed: integer("unemployed").notNull(),
+  student: integer("student").notNull(),
+  retired: integer("retired").notNull(),
+  other: integer("other").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Job occupations
-export const jobOccupations = table(
-  'job_occupations',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    occupation: text('occupation').notNull(),
-    count: integer('count').notNull(),
-    percentage: real('percentage').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const jobOccupations = pgTable("job_occupations", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  occupation: varchar("occupation", { length: 255 }).notNull(),
+  count: integer("count").notNull(),
+  percentage: real("percentage").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Age groups with generation data
-export const ageGroupData = table(
-  'age_group_data',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    ageGroup: text('age_group').notNull(),
-    generation: text('generation').notNull(),
-    count: integer('count').notNull(),
-    percentage: real('percentage').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const ageGroupData = pgTable("age_group_data", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  ageGroup: varchar("age_group", { length: 50 }).notNull(),
+  generation: varchar("generation", { length: 50 }).notNull(),
+  count: integer("count").notNull(),
+  percentage: real("percentage").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Socioeconomic data
-export const socioeconomicData = table(
-  'socioeconomic_data',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    category: text('category').notNull(),
-    value: integer('value').notNull(),
-    percentage: real('percentage').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const socioeconomicData = pgTable("socioeconomic_data", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  category: varchar("category", { length: 255 }).notNull(),
+  value: integer("value").notNull(),
+  percentage: real("percentage").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Income data
-export const incomeData = table(
-  'income_data',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    incomeRange: text('income_range').notNull(),
-    count: integer('count').notNull(),
-    percentage: real('percentage').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const incomeData = pgTable("income_data", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  incomeRange: varchar("income_range", { length: 255 }).notNull(),
+  count: integer("count").notNull(),
+  percentage: real("percentage").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Food expenditure data
-export const foodExpenditureData = table(
-  'food_expenditure_data',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    category: text('category').notNull(),
-    amount: real('amount').notNull(),
-    percentage: real('percentage').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const foodExpenditureData = pgTable("food_expenditure_data", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  category: varchar("category", { length: 255 }).notNull(),
+  amount: real("amount").notNull(),
+  percentage: real("percentage").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Points of Interest (POI)
-export const pointsOfInterest = table(
-  'points_of_interest',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    cityId: integer('city_id').notNull().references(() => cities.id, { onDelete: 'cascade' }),
-    poiType: text('poi_type').notNull(),
-    count: integer('count').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date()),
-  }
-);
+export const pointsOfInterest = pgTable("points_of_interest", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id")
+    .notNull()
+    .references(() => cities.id, { onDelete: "cascade" }),
+  poiType: varchar("poi_type", { length: 100 }).notNull(),
+  count: integer("count").notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 // Export types
 export type User = typeof users.$inferSelect;

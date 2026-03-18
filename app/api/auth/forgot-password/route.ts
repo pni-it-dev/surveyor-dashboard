@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const emailSent = await sendPasswordResetEmail(
       user.email,
       resetToken,
-      user.name,
+      user.name ?? undefined,
     );
 
     console.log("[AUTH] Password reset email sent to:", user.email);

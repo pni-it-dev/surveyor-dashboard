@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { cities } from "@/lib/schema";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const citiesList = await db.select().from(cities);
 
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
           id: city.id,
           name: city.name,
           address: city.address,
-          latitude: parseFloat(city.latitude as any),
-          longitude: parseFloat(city.longitude as any),
+          latitude: city.latitude,
+          longitude: city.longitude,
           geojsonData: city.geojsonData,
         })),
       },
