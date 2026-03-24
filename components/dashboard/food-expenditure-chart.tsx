@@ -19,17 +19,11 @@ export function FoodExpenditureChart({ cityId }: FoodExpenditureChartProps) {
     const fetchData = async () => {
       if (!cityId) return;
 
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/demographics?cityId=${cityId}`);
         const result = await response.json();
-
-        if (result.foodExpenditureData && result.foodExpenditureData.length > 0) {
-          const formatted = result.foodExpenditureData.map((item: any) => ({
-            name: item.category,
-            value: parseFloat(item.amount),
-          }));
-          setData(formatted);
-        }
+        setData(result.foodExpenditureData ?? []);
       } catch (error) {
         console.error('Failed to fetch food expenditure data:', error);
       } finally {
@@ -42,7 +36,7 @@ export function FoodExpenditureChart({ cityId }: FoodExpenditureChartProps) {
 
   const handleBarClick = (entry: any) => {
     const newCategories = filters.selectedFoodCategories.includes(entry.name)
-      ? filters.selectedFoodCategories.filter((c) => c !== entry.name)
+      ? filters.selectedFoodCategories.filter((category) => category !== entry.name)
       : [...filters.selectedFoodCategories, entry.name];
 
     updateFilter('selectedFoodCategories', newCategories);
@@ -50,53 +44,49 @@ export function FoodExpenditureChart({ cityId }: FoodExpenditureChartProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Food Expenditure</CardTitle>
+          <CardTitle className="text-base">Preferensi & Belanja Makan</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 bg-muted rounded-lg animate-pulse" />
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Monthly Food Expenditure</CardTitle>
+          <CardTitle className="text-base">Preferensi & Belanja Makan</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-45} textAnchor="end" height={80} />
+              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-35} textAnchor="end" height={72} />
               <YAxis stroke="var(--muted-foreground)" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: '12px',
                 }}
                 labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => `$${value.toFixed(2)}`}
+                formatter={(value: any) => `Rp${Number(value).toLocaleString('id-ID')}`}
               />
               <Bar
                 dataKey="value"
                 fill="var(--chart-5)"
-                onClick={(data) => handleBarClick(data)}
+                onClick={(barData) => handleBarClick(barData)}
                 cursor="pointer"
-                radius={[8, 8, 0, 0]}
+                radius={[10, 10, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Click on a bar to filter by food category
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Nilai chart adalah total monthly food expenditure per preferensi makanan.
           </p>
         </CardContent>
       </Card>

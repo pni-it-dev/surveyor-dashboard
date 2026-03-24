@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
 interface GenderChartProps {
@@ -19,17 +19,11 @@ export function GenderChart({ cityId }: GenderChartProps) {
     const fetchData = async () => {
       if (!cityId) return;
 
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/demographics?cityId=${cityId}`);
         const result = await response.json();
-
-        if (result.genderBreakdown && result.genderBreakdown.length > 0) {
-          const gender = result.genderBreakdown[0];
-          setData([
-            { name: 'Male', value: gender.male },
-            { name: 'Female', value: gender.female },
-          ]);
-        }
+        setData(result.genderBreakdown ?? []);
       } catch (error) {
         console.error('Failed to fetch gender data:', error);
       } finally {
@@ -50,26 +44,22 @@ export function GenderChart({ cityId }: GenderChartProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Population by Gender</CardTitle>
+          <CardTitle className="text-base">Komposisi Gender</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 bg-muted rounded-lg animate-pulse" />
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm backdrop-blur">
         <CardHeader>
-          <CardTitle className="text-base">Population by Gender</CardTitle>
+          <CardTitle className="text-base">Komposisi Gender</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -81,21 +71,22 @@ export function GenderChart({ cityId }: GenderChartProps) {
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: '12px',
                 }}
                 labelStyle={{ color: 'var(--foreground)' }}
+                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
               />
               <Bar
                 dataKey="value"
                 fill="var(--chart-1)"
-                onClick={(data) => handleBarClick(data)}
+                onClick={(barData) => handleBarClick(barData)}
                 cursor="pointer"
-                radius={[8, 8, 0, 0]}
+                radius={[10, 10, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Click on a bar to filter by gender
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Klik batang chart untuk aktifkan filter gender.
           </p>
         </CardContent>
       </Card>

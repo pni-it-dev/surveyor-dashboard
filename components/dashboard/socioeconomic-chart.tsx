@@ -19,17 +19,11 @@ export function SocioeconomicChart({ cityId }: SocioeconomicChartProps) {
     const fetchData = async () => {
       if (!cityId) return;
 
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/demographics?cityId=${cityId}`);
         const result = await response.json();
-
-        if (result.socioeconomicData && result.socioeconomicData.length > 0) {
-          const formatted = result.socioeconomicData.map((item: any) => ({
-            name: item.category,
-            value: item.value,
-          }));
-          setData(formatted);
-        }
+        setData(result.socioeconomicData ?? []);
       } catch (error) {
         console.error('Failed to fetch socioeconomic data:', error);
       } finally {
@@ -42,7 +36,7 @@ export function SocioeconomicChart({ cityId }: SocioeconomicChartProps) {
 
   const handleBarClick = (entry: any) => {
     const newCategories = filters.selectedSocioeconomic.includes(entry.name)
-      ? filters.selectedSocioeconomic.filter((c) => c !== entry.name)
+      ? filters.selectedSocioeconomic.filter((category) => category !== entry.name)
       : [...filters.selectedSocioeconomic, entry.name];
 
     updateFilter('selectedSocioeconomic', newCategories);
@@ -50,53 +44,49 @@ export function SocioeconomicChart({ cityId }: SocioeconomicChartProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Social Economy</CardTitle>
+          <CardTitle className="text-base">Kelas Sosial Ekonomi</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 bg-muted rounded-lg animate-pulse" />
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Social Economy</CardTitle>
+          <CardTitle className="text-base">Kelas Sosial Ekonomi</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-45} textAnchor="end" height={80} />
+              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-35} textAnchor="end" height={72} />
               <YAxis stroke="var(--muted-foreground)" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: '12px',
                 }}
                 labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => value.toLocaleString()}
+                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
               />
               <Bar
                 dataKey="value"
                 fill="var(--chart-3)"
-                onClick={(data) => handleBarClick(data)}
+                onClick={(barData) => handleBarClick(barData)}
                 cursor="pointer"
-                radius={[8, 8, 0, 0]}
+                radius={[10, 10, 0, 0]}
               />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Click on a bar to filter by social economy
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Klik batang untuk filter kelas sosial ekonomi.
           </p>
         </CardContent>
       </Card>
