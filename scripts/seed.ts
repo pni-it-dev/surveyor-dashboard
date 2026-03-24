@@ -10,7 +10,6 @@ import {
   occupationTypeMaster,
   poiTypeMaster,
   socioeconomyMaster,
-  surveyorKabkotGeojson,
   surveyorPopulationFact,
 } from "../lib/schema";
 import { sql } from "drizzle-orm";
@@ -104,46 +103,6 @@ const masterSeedData = {
     { id: 15, poi: "Fasilitas Olahraga dan Gelanggang" },
   ],
 };
-
-
-const geojsonSeedData = [
-  {
-    id: 3171,
-    name: "JAKARTA SELATAN",
-    geojson: {
-      type: "Feature",
-      properties: { regionCode: 3171, regionName: "JAKARTA SELATAN" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [[[106.775,-6.305],[106.86,-6.305],[106.86,-6.22],[106.775,-6.22],[106.775,-6.305]]],
-      },
-    },
-  },
-  {
-    id: 3578,
-    name: "KOTA SURABAYA",
-    geojson: {
-      type: "Feature",
-      properties: { regionCode: 3578, regionName: "KOTA SURABAYA" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [[[112.705,-7.34],[112.79,-7.34],[112.79,-7.255],[112.705,-7.255],[112.705,-7.34]]],
-      },
-    },
-  },
-  {
-    id: 3273,
-    name: "KOTA BANDUNG",
-    geojson: {
-      type: "Feature",
-      properties: { regionCode: 3273, regionName: "KOTA BANDUNG" },
-      geometry: {
-        type: "Polygon",
-        coordinates: [[[107.565,-6.93],[107.665,-6.93],[107.665,-6.84],[107.565,-6.84],[107.565,-6.93]]],
-      },
-    },
-  },
-];
 
 const AREA_BLUEPRINTS = [
   {
@@ -265,7 +224,6 @@ async function main() {
     await db.delete(occupationStatusMaster);
     await db.delete(maritalStatusMaster);
     await db.delete(genderMaster);
-    await db.delete(surveyorKabkotGeojson);
 
     await db.insert(genderMaster).values(masterSeedData.gender);
     await db.insert(maritalStatusMaster).values(masterSeedData.maritalStatus);
@@ -277,7 +235,6 @@ async function main() {
     await db.insert(housingStatusMaster).values(masterSeedData.housingStatus);
     await db.insert(foodPreferencesMaster).values(masterSeedData.foodPreferences);
     await db.insert(poiTypeMaster).values(masterSeedData.poiTypes);
-    await db.insert(surveyorKabkotGeojson).values(geojsonSeedData);
 
     const populationFacts = buildPopulationFacts();
     await db.insert(surveyorPopulationFact).values(populationFacts);

@@ -9,7 +9,6 @@ DROP TABLE IF EXISTS occupation_type_master CASCADE;
 DROP TABLE IF EXISTS occupation_status_master CASCADE;
 DROP TABLE IF EXISTS marital_status_master CASCADE;
 DROP TABLE IF EXISTS gender_master CASCADE;
-DROP TABLE IF EXISTS surveyor_kabkot_geojson CASCADE;
 DROP TABLE IF EXISTS points_of_interest CASCADE;
 DROP TABLE IF EXISTS food_expenditure_data CASCADE;
 DROP TABLE IF EXISTS income_data CASCADE;
@@ -54,13 +53,6 @@ CREATE TABLE IF NOT EXISTS surveyor_sessions (
 );
 
 CREATE INDEX IF NOT EXISTS surveyor_sessions_token_idx ON surveyor_sessions(session_token);
-
-
-CREATE TABLE IF NOT EXISTS surveyor_kabkot_geojson (
-  id INTEGER PRIMARY KEY,
-  name VARCHAR(200) NOT NULL,
-  geojson JSONB NOT NULL
-);
 
 CREATE TABLE IF NOT EXISTS gender_master (
   id SERIAL PRIMARY KEY,

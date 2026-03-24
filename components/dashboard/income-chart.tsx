@@ -18,34 +18,77 @@ export function IncomeChart({ cityId }: IncomeChartProps) {
   useEffect(() => {
     const load = async () => {
       if (!cityId) return;
-      const response = await fetch(`/api/demographics?cityId=${cityId}`);
-      const result = await response.json();
-      setData(result.incomeData ?? []);
+
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/demographics?cityId=${cityId}`);
+        const result = await response.json();
+        setData(result.incomeData ?? []);
+      } catch (error) {
+        console.error('Failed to fetch income data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     load();
   }, [cityId]);
 
+  const handleBarClick = (entry: any) => {
+    const newIncomes = filters.selectedIncomeRanges.includes(entry.name)
+      ? filters.selectedIncomeRanges.filter((income) => income !== entry.name)
+      : [...filters.selectedIncomeRanges, entry.name];
+
+    updateFilter('selectedIncomeRanges', newIncomes);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Pendapatan Bulanan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className="border-border/50"><CardHeader><CardTitle className="text-base">Range Pendapatan Bulanan</CardTitle></CardHeader><CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="name" stroke="var(--muted-foreground)" interval={0} />
-            <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip formatter={(v: any) => Number(v).toLocaleString('id-ID')} />
-            <Bar dataKey="value" onClick={(barData: any) => {
-              const next = filters.selectedIncomeRanges.includes(barData.name)
-                ? filters.selectedIncomeRanges.filter((x) => x !== barData.name)
-                : [...filters.selectedIncomeRanges, barData.name];
-              updateFilter('selectedIncomeRanges', next);
-            }}>
-              {data.map((entry, idx) => <Cell key={entry.name} fill={COLORS[idx % COLORS.length]} />)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-        <p className="text-xs text-muted-foreground">Total: {total.toLocaleString('id-ID')} responden.</p>
-      </CardContent></Card>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Pendapatan Bulanan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-35} textAnchor="end" height={72} />
+              <YAxis stroke="var(--muted-foreground)" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                }}
+                labelStyle={{ color: 'var(--foreground)' }}
+                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
+              />
+              <Bar
+                dataKey="value"
+                fill="var(--chart-4)"
+                onClick={(barData) => handleBarClick(barData)}
+                cursor="pointer"
+                radius={[10, 10, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Klik batang untuk filter rentang pendapatan.
+          </p>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 }

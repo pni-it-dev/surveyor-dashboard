@@ -19,38 +19,75 @@ export function JobOccupationChart({ cityId }: JobOccupationChartProps) {
   useEffect(() => {
     const fetchData = async () => {
       if (!cityId) return;
-      const response = await fetch(`/api/demographics?cityId=${cityId}`);
-      const result = await response.json();
-      setData(result.jobOccupations ?? []);
+
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/demographics?cityId=${cityId}`);
+        const result = await response.json();
+        setData(result.jobOccupations ?? []);
+      } catch (error) {
+        console.error('Failed to fetch occupation type data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchData();
   }, [cityId]);
 
-  const total = useMemo(() => data.reduce((sum, item) => sum + Number(item.value || 0), 0), [data]);
+  const handleBarClick = (entry: any) => {
+    const newJobs = filters.selectedJobOccupations.includes(entry.name)
+      ? filters.selectedJobOccupations.filter((job) => job !== entry.name)
+      : [...filters.selectedJobOccupations, entry.name];
+
+    updateFilter('selectedJobOccupations', newJobs);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Tipe Pekerjaan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className="border-border/50">
-        <CardHeader><CardTitle className="text-base">Tipe Pekerjaan (Top kategori)</CardTitle></CardHeader>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Tipe Pekerjaan</CardTitle>
+        </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={380}>
-            <BarChart data={data} layout="vertical" margin={{ top: 10, right: 30, left: 210, bottom: 10 }}>
+          <ResponsiveContainer width="100%" height={360}>
+            <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 160, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis type="number" stroke="var(--muted-foreground)" />
-              <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 12 }} interval={0} stroke="var(--muted-foreground)" />
-              <Tooltip formatter={(v: any) => Number(v).toLocaleString('id-ID')} />
-              <Legend />
-              <Bar dataKey="value" radius={[0, 8, 8, 0]} onClick={(barData: any) => {
-                const next = filters.selectedJobOccupations.includes(barData.name)
-                  ? filters.selectedJobOccupations.filter((job) => job !== barData.name)
-                  : [...filters.selectedJobOccupations, barData.name];
-                updateFilter('selectedJobOccupations', next);
-              }}>
-                {data.map((entry, idx) => <Cell key={entry.name} fill={COLORS[idx % COLORS.length]} />)}
-              </Bar>
+              <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                }}
+                labelStyle={{ color: 'var(--foreground)' }}
+                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
+              />
+              <Bar
+                dataKey="value"
+                fill="var(--chart-2)"
+                onClick={(barData) => handleBarClick(barData)}
+                cursor="pointer"
+                radius={[0, 10, 10, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground">Total terpetakan: {total.toLocaleString('id-ID')} responden. Klik batang untuk filter.</p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Klik batang untuk filter tipe pekerjaan.
+          </p>
         </CardContent>
       </Card>
     </motion.div>

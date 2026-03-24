@@ -33,28 +33,61 @@ export function POISummary({ cityId }: POISummaryProps) {
   useEffect(() => {
     const fetchData = async () => {
       if (!cityId) return;
-      const response = await fetch(`/api/demographics?cityId=${cityId}`);
-      const result = await response.json();
-      setPois(result.pointsOfInterest ?? []);
+
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/demographics?cityId=${cityId}`);
+        const result = await response.json();
+        setPois(result.pointsOfInterest ?? []);
+      } catch (error) {
+        console.error('Failed to fetch POI data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     fetchData();
   }, [cityId]);
 
-  return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className="border-border/50">
-        <CardHeader><CardTitle className="text-base">Ringkasan POI Turunan</CardTitle></CardHeader>
+  if (isLoading) {
+    return (
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Ringkasan POI</CardTitle>
+        </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="h-48 rounded-lg bg-muted animate-pulse" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Ringkasan POI Turunan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {pois.map((poi, index) => (
-              <div key={poi.id} className={`rounded-2xl border border-border/60 bg-gradient-to-br p-4 ${CARD_COLORS[index % CARD_COLORS.length]}`}>
-                <div className="mb-2 inline-flex rounded-xl bg-white/85 p-2 text-primary">{POI_ICONS[poi.poiType] ?? <Landmark className="h-5 w-5" />}</div>
-                <p className="line-clamp-2 min-h-10 text-xs font-medium text-foreground">{poi.poiType}</p>
-                <p className="mt-1 text-lg font-bold text-primary">{Number(poi.count).toLocaleString('id-ID')}</p>
-              </div>
+              <motion.div
+                key={poi.id}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.03 }}
+                className="flex flex-col items-center rounded-2xl border border-border/60 bg-gradient-to-br from-card to-secondary/60 p-4 text-center"
+              >
+                <div className="mb-2 rounded-2xl bg-primary/12 p-3 text-primary">
+                  {POI_ICONS[poi.poiType] ?? <Landmark className="h-5 w-5" />}
+                </div>
+                <p className="mb-1 text-xs font-medium text-foreground">{poi.poiType}</p>
+                <p className="text-lg font-bold text-primary">{Number(poi.count).toLocaleString('id-ID')}</p>
+              </motion.div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">Angka POI adalah indikator turunan untuk membaca potensi layanan per area.</p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            POI dihitung sebagai indikator turunan untuk kebutuhan dashboard sampai tabel POI fact tersedia.
+          </p>
         </CardContent>
       </Card>
     </motion.div>

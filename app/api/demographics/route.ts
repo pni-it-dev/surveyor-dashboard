@@ -122,18 +122,11 @@ export async function GET(request: NextRequest) {
       db.execute(sql`
         SELECT
           CASE
-            WHEN usia <= 5 THEN '0-5'
-            WHEN usia <= 10 THEN '6-10'
-            WHEN usia <= 15 THEN '11-15'
-            WHEN usia <= 20 THEN '16-20'
-            WHEN usia <= 25 THEN '21-25'
-            WHEN usia <= 30 THEN '26-30'
-            WHEN usia <= 35 THEN '31-35'
-            WHEN usia <= 40 THEN '36-40'
-            WHEN usia <= 45 THEN '41-45'
-            WHEN usia <= 50 THEN '46-50'
-            WHEN usia <= 55 THEN '51-55'
-            WHEN usia <= 60 THEN '56-60'
+            WHEN usia < 20 THEN '0-19'
+            WHEN usia < 30 THEN '20-29'
+            WHEN usia < 40 THEN '30-39'
+            WHEN usia < 50 THEN '40-49'
+            WHEN usia < 60 THEN '50-59'
             ELSE '60+'
           END AS "ageGroup",
           CASE
@@ -143,11 +136,11 @@ export async function GET(request: NextRequest) {
             WHEN usia <= 60 THEN 'Gen X'
             ELSE 'Boomers'
           END AS generation,
-          COALESCE(SUM(jumlah_anggota), 0)::int AS value
+          COUNT(*)::int AS value
         FROM surveyor_population_fact
         WHERE kecamatan = ${areaName}
         GROUP BY 1, 2
-        ORDER BY MIN(usia), 2
+        ORDER BY 1, 2
       `),
       db.execute(sql`
         SELECT sem.class AS name, COUNT(*)::int AS value
@@ -167,7 +160,7 @@ export async function GET(request: NextRequest) {
       `),
       db.execute(sql`
         SELECT fpm.preference AS name,
-               COALESCE(SUM(spf.jumlah_anggota), 0)::int AS value
+               ROUND(COALESCE(SUM(spf.monthly_food_expenditure), 0), 2)::float AS value
         FROM surveyor_population_fact spf
         JOIN food_preferences_master fpm ON fpm.id = spf.food_preference_id
         WHERE spf.kecamatan = ${areaName}

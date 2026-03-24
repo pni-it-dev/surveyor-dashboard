@@ -1,7 +1,6 @@
 import {
   index,
   integer,
-  jsonb,
   pgTable,
   real,
   serial,
@@ -49,12 +48,6 @@ export const sessions = pgTable(
     sessionTokenIdx: index("surveyor_sessions_token_idx").on(table.sessionToken),
   }),
 );
-
-export const surveyorKabkotGeojson = pgTable("surveyor_kabkot_geojson", {
-  id: integer("id").primaryKey(),
-  name: varchar("name", { length: 200 }).notNull(),
-  geojson: jsonb("geojson").notNull(),
-});
 
 export const genderMaster = pgTable("gender_master", {
   id: serial("id").primaryKey(),
@@ -122,7 +115,9 @@ export const surveyorPopulationFact = pgTable(
     id: serial("id").primaryKey(),
     noKk: varchar("no_kk", { length: 50 }).notNull().unique(),
     jumlahAnggota: integer("jumlah_anggota").notNull(),
-    genderId: integer("gender_id").notNull().references(() => genderMaster.id),
+    genderId: integer("gender_id")
+      .notNull()
+      .references(() => genderMaster.id),
     usia: integer("usia").notNull(),
     housingStatusId: integer("housing_status_id")
       .notNull()
@@ -132,7 +127,9 @@ export const surveyorPopulationFact = pgTable(
     maritalStatusId: integer("marital_status_id")
       .notNull()
       .references(() => maritalStatusMaster.id),
-    educationId: integer("education_id").notNull().references(() => educationMaster.id),
+    educationId: integer("education_id")
+      .notNull()
+      .references(() => educationMaster.id),
     occupationStatusId: integer("occupation_status_id")
       .notNull()
       .references(() => occupationStatusMaster.id),
@@ -152,16 +149,19 @@ export const surveyorPopulationFact = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    kecamatanIdx: index("surveyor_population_fact_kecamatan_idx").on(table.kecamatan),
+    kecamatanIdx: index("surveyor_population_fact_kecamatan_idx").on(
+      table.kecamatan,
+    ),
     kabkotIdx: index("surveyor_population_fact_kabkot_idx").on(table.kabkotId),
     genderIdx: index("surveyor_population_fact_gender_idx").on(table.genderId),
-    maritalIdx: index("surveyor_population_fact_marital_idx").on(table.maritalStatusId),
+    maritalIdx: index("surveyor_population_fact_marital_idx").on(
+      table.maritalStatusId,
+    ),
   }),
 );
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
-export type SurveyorKabkotGeojson = typeof surveyorKabkotGeojson.$inferSelect;
 export type GenderMaster = typeof genderMaster.$inferSelect;
 export type MaritalStatusMaster = typeof maritalStatusMaster.$inferSelect;
 export type OccupationStatusMaster = typeof occupationStatusMaster.$inferSelect;

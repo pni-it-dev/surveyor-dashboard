@@ -40,12 +40,14 @@ export function CityInfo({ cityId }: CityInfoProps) {
     return null;
   }
 
-    return (
+  const palette = city.palette ?? ['#f9c5d5', '#c7ceea', '#b5ead7'];
+
+  return (
     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <Card
         className="overflow-hidden border-border/50 shadow-sm"
         style={{
-          backgroundImage: 'linear-gradient(135deg, rgba(220,40,40,0.10), rgba(220,40,40,0.02))',
+          backgroundImage: `linear-gradient(135deg, ${palette[0]}33, ${palette[1]}33, ${palette[2]}33)`,
         }}
       >
         <CardContent className="pt-6">
@@ -56,8 +58,7 @@ export function CityInfo({ cityId }: CityInfoProps) {
               </div>
               <div className="flex-1">
                 <h2 className="mb-2 text-2xl font-bold text-foreground">{city.name}</h2>
-                <p className="mb-1 text-sm text-muted-foreground">{city.address}</p>
-                <p className="mb-3 text-xs text-primary font-semibold">{city.kabkotName}</p>
+                <p className="mb-3 text-sm text-muted-foreground">{city.address}</p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div className="rounded-2xl bg-background/70 p-3">
                     <p className="text-xs text-muted-foreground">Kab/Kota ID</p>

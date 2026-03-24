@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
 interface GenderChartProps {
@@ -23,6 +23,7 @@ export function GenderChart({ cityId }: GenderChartProps) {
   useEffect(() => {
     const fetchData = async () => {
       if (!cityId) return;
+
       setIsLoading(true);
       try {
         const response = await fetch(`/api/demographics?cityId=${cityId}`);
@@ -47,34 +48,51 @@ export function GenderChart({ cityId }: GenderChartProps) {
   };
 
   if (isLoading) {
-    return <Card className="border-border/50"><CardHeader><CardTitle className="text-base">Komposisi Gender</CardTitle></CardHeader><CardContent><div className="h-80 rounded-lg bg-muted animate-pulse" /></CardContent></Card>;
+    return (
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-base">Komposisi Gender</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm backdrop-blur">
         <CardHeader>
-          <CardTitle className="text-base">Komposisi Gender (Horizontal)</CardTitle>
+          <CardTitle className="text-base">Komposisi Gender</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data} layout="vertical" margin={{ top: 10, right: 40, left: 20, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis type="number" stroke="var(--muted-foreground)" />
-              <YAxis dataKey="name" type="category" width={110} stroke="var(--muted-foreground)" />
-              <Tooltip formatter={(value: any) => Number(value).toLocaleString('id-ID')} />
-              <Bar dataKey="value" radius={[0, 10, 10, 0]} cursor="pointer" onClick={(barData) => handleBarClick(barData)}>
-                {data.map((entry) => (
-                  <Cell key={entry.name} fill={COLOR_MAP[entry.name] ?? '#dc2828'} />
-                ))}
-                <LabelList dataKey="value" position="right" formatter={(v: number) => Number(v).toLocaleString('id-ID')} />
-              </Bar>
+              <XAxis dataKey="name" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                }}
+                labelStyle={{ color: 'var(--foreground)' }}
+                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
+              />
+              <Bar
+                dataKey="value"
+                fill="var(--chart-1)"
+                onClick={(barData) => handleBarClick(barData)}
+                cursor="pointer"
+                radius={[10, 10, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
-          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Total responden: {total.toLocaleString('id-ID')}</span>
-            <span>Klik bar untuk filter</span>
-          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Klik batang chart untuk aktifkan filter gender.
+          </p>
         </CardContent>
       </Card>
     </motion.div>
