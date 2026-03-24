@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -17,9 +17,10 @@ interface AgeGroupChartProps {
   cityId: number | null;
 }
 
+const AGE_ORDER = ['0-5','6-10','11-15','16-20','21-25','26-30','31-35','36-40','41-45','46-50','51-55','56-60','60+'];
+
 export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +55,6 @@ export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [cityId]);
 
@@ -78,10 +78,10 @@ export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
           <CardTitle className="text-base">Kelompok Usia & Generasi</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+          <ResponsiveContainer width="100%" height={380}>
+            <BarChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="ageGroup" stroke="var(--muted-foreground)" />
+              <XAxis dataKey="ageGroup" stroke="var(--muted-foreground)" interval={0} angle={-25} textAnchor="end" height={60} />
               <YAxis stroke="var(--muted-foreground)" />
               <Tooltip
                 contentStyle={{

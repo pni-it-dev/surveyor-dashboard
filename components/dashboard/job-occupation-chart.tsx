@@ -1,19 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
 interface JobOccupationChartProps {
   cityId: number | null;
 }
 
+const COLORS = ['#dc2828', '#2563eb', '#16a34a', '#f97316', '#a855f7', '#06b6d4', '#eab308', '#ec4899'];
+
 export function JobOccupationChart({ cityId }: JobOccupationChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +31,6 @@ export function JobOccupationChart({ cityId }: JobOccupationChartProps) {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [cityId]);
 

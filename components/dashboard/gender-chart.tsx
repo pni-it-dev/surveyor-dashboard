@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -9,6 +9,11 @@ import { useFilters } from '@/lib/filter-context';
 interface GenderChartProps {
   cityId: number | null;
 }
+
+const COLOR_MAP: Record<string, string> = {
+  'LAKI LAKI': '#2563eb',
+  'PEREMPUAN': '#ec4899',
+};
 
 export function GenderChart({ cityId }: GenderChartProps) {
   const { filters, updateFilter } = useFilters();
@@ -30,15 +35,15 @@ export function GenderChart({ cityId }: GenderChartProps) {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [cityId]);
+
+  const total = useMemo(() => data.reduce((sum, item) => sum + Number(item.value || 0), 0), [data]);
 
   const handleBarClick = (entry: any) => {
     const newGenders = filters.selectedGenders.includes(entry.name)
       ? filters.selectedGenders.filter((g) => g !== entry.name)
       : [...filters.selectedGenders, entry.name];
-
     updateFilter('selectedGenders', newGenders);
   };
 
@@ -63,7 +68,7 @@ export function GenderChart({ cityId }: GenderChartProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data}>
+            <BarChart data={data} layout="vertical" margin={{ top: 10, right: 40, left: 20, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="name" stroke="var(--muted-foreground)" />
               <YAxis stroke="var(--muted-foreground)" />

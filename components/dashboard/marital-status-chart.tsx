@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
@@ -15,7 +15,7 @@ interface MaritalStatusChartProps {
 export function MaritalStatusChart({ cityId }: MaritalStatusChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const total = useMemo(() => data.reduce((sum, d) => sum + Number(d.value || 0), 0), [data]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,7 +32,6 @@ export function MaritalStatusChart({ cityId }: MaritalStatusChartProps) {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [cityId]);
 
@@ -40,8 +39,7 @@ export function MaritalStatusChart({ cityId }: MaritalStatusChartProps) {
     const newStatuses = filters.selectedMaritalStatus.includes(entry.name)
       ? filters.selectedMaritalStatus.filter((status) => status !== entry.name)
       : [...filters.selectedMaritalStatus, entry.name];
-
-    updateFilter('selectedMaritalStatus', newStatuses);
+    updateFilter('selectedMaritalStatus', next);
   };
 
   if (isLoading) {
@@ -64,7 +62,7 @@ export function MaritalStatusChart({ cityId }: MaritalStatusChartProps) {
           <CardTitle className="text-base">Status Pernikahan</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
                 data={data}

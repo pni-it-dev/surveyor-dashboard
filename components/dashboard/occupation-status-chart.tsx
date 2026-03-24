@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
 const COLORS = ['#b5ead7', '#c7ceea', '#f6d6ad', '#f9c5d5', '#d9c6f3'];
@@ -15,7 +15,7 @@ interface OccupationStatusChartProps {
 export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const total = useMemo(() => data.reduce((sum, d) => sum + Number(d.value || 0), 0), [data]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,7 +32,6 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [cityId]);
 
@@ -40,8 +39,7 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
     const newStatuses = filters.selectedOccupationStatus.includes(entry.name)
       ? filters.selectedOccupationStatus.filter((status) => status !== entry.name)
       : [...filters.selectedOccupationStatus, entry.name];
-
-    updateFilter('selectedOccupationStatus', newStatuses);
+    updateFilter('selectedOccupationStatus', next);
   };
 
   if (isLoading) {
@@ -64,7 +62,7 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
           <CardTitle className="text-base">Status Pekerjaan</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
                 data={data}

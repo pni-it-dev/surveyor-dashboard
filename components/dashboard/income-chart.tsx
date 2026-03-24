@@ -1,22 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
-interface IncomeChartProps {
-  cityId: number | null;
-}
+const COLORS = ['#2563eb', '#0ea5e9', '#14b8a6', '#f59e0b', '#dc2626'];
+
+interface IncomeChartProps { cityId: number | null; }
 
 export function IncomeChart({ cityId }: IncomeChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const total = useMemo(() => data.reduce((s, d) => s + Number(d.value || 0), 0), [data]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       if (!cityId) return;
 
       setIsLoading(true);
@@ -30,8 +30,7 @@ export function IncomeChart({ cityId }: IncomeChartProps) {
         setIsLoading(false);
       }
     };
-
-    fetchData();
+    load();
   }, [cityId]);
 
   const handleBarClick = (entry: any) => {

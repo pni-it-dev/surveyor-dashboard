@@ -15,6 +15,40 @@ interface MapComponentProps {
   };
 }
 
+function flattenCoordinates(feature?: GeoFeature) {
+  if (!feature?.geometry?.coordinates) return [] as [number, number][];
+  const { type, coordinates } = feature.geometry;
+  if (type === 'Polygon') {
+    return (coordinates[0] ?? []) as [number, number][];
+  }
+  if (type === 'MultiPolygon') {
+    return (coordinates[0]?.[0] ?? []) as [number, number][];
+  }
+  return [] as [number, number][];
+}
+
+function buildPath(points: [number, number][]) {
+  if (points.length < 3) return '';
+  const lngs = points.map((point) => point[0]);
+  const lats = points.map((point) => point[1]);
+  const minX = Math.min(...lngs);
+  const maxX = Math.max(...lngs);
+  const minY = Math.min(...lats);
+  const maxY = Math.max(...lats);
+
+  const width = maxX - minX || 1;
+  const height = maxY - minY || 1;
+  const pad = 10;
+
+  return points
+    .map((point, index) => {
+      const x = ((point[0] - minX) / width) * (100 - pad * 2) + pad;
+      const y = (1 - (point[1] - minY) / height) * (100 - pad * 2) + pad;
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ') + ' Z';
+}
+
 export default function MapComponent({ city }: MapComponentProps) {
   const mapX = ((city.longitude + 180) / 360) * 100;
   const mapY = ((90 - city.latitude) / 180) * 100;
@@ -22,7 +56,7 @@ export default function MapComponent({ city }: MapComponentProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="relative h-full w-full overflow-hidden rounded-lg border border-border/50"

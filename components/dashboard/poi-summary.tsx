@@ -23,13 +23,12 @@ const POI_ICONS: { [key: string]: React.ReactNode } = {
   'Fasilitas Olahraga dan Gelanggang': <Building2 className="h-5 w-5" />,
 };
 
-interface POISummaryProps {
-  cityId: number | null;
-}
+const CARD_COLORS = ['from-red-50 to-red-100', 'from-blue-50 to-blue-100', 'from-emerald-50 to-emerald-100', 'from-amber-50 to-amber-100', 'from-fuchsia-50 to-fuchsia-100'];
+
+interface POISummaryProps { cityId: number | null; }
 
 export function POISummary({ cityId }: POISummaryProps) {
   const [pois, setPois] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,7 +45,6 @@ export function POISummary({ cityId }: POISummaryProps) {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [cityId]);
 

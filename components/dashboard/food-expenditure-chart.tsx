@@ -1,22 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
-interface FoodExpenditureChartProps {
-  cityId: number | null;
-}
+const COLORS = ['#dc2626', '#db2777', '#2563eb', '#0d9488'];
+
+interface FoodExpenditureChartProps { cityId: number | null; }
 
 export function FoodExpenditureChart({ cityId }: FoodExpenditureChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const total = useMemo(() => data.reduce((s, d) => s + Number(d.value || 0), 0), [data]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       if (!cityId) return;
 
       setIsLoading(true);
@@ -30,8 +30,7 @@ export function FoodExpenditureChart({ cityId }: FoodExpenditureChartProps) {
         setIsLoading(false);
       }
     };
-
-    fetchData();
+    load();
   }, [cityId]);
 
   const handleBarClick = (entry: any) => {
