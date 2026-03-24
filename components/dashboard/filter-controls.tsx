@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select,
@@ -28,21 +27,17 @@ export function FilterControls({
   onClearFilters,
 }: FilterControlsProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-lg">Filter Controls</CardTitle>
             {isFilterActive && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClearFilters}
-                className="flex items-center gap-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                className="flex items-center gap-2 text-xs font-medium text-primary transition-colors hover:text-primary/80"
               >
                 <X className="h-4 w-4" />
                 Clear All
@@ -53,15 +48,10 @@ export function FilterControls({
 
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              Select City
-            </label>
-            <Select
-              value={selectedCityId?.toString() || ''}
-              onValueChange={(value) => onCityChange(parseInt(value))}
-            >
-              <SelectTrigger className="w-full border-border/50">
-                <SelectValue placeholder="Choose a city..." />
+            <label className="mb-2 block text-sm font-medium text-foreground">Pilih Kecamatan</label>
+            <Select value={selectedCityId?.toString() || ''} onValueChange={(value) => onCityChange(parseInt(value, 10))}>
+              <SelectTrigger className="w-full border-border/50 bg-background/90">
+                <SelectValue placeholder="Pilih area..." />
               </SelectTrigger>
               <SelectContent>
                 {cities.map((city) => (
@@ -73,9 +63,9 @@ export function FilterControls({
             </Select>
           </div>
 
-          <div className="rounded-lg bg-muted/30 border border-border/50 p-4">
+          <div className="rounded-2xl border border-border/50 bg-gradient-to-r from-muted/40 to-secondary/60 p-4">
             <p className="text-xs text-muted-foreground">
-              💡 <strong>Tip:</strong> Click on chart elements to apply global filters. All charts will update dynamically based on your selections.
+              💡 <strong>Tip:</strong> Semua chart sekarang diturunkan dari satu tabel fact + tabel master. Klik elemen chart untuk aktifkan filter global.
             </p>
           </div>
         </CardContent>

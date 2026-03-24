@@ -4,15 +4,13 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useFilters } from '@/lib/filter-context';
 
 const GENERATION_COLORS: { [key: string]: string } = {
-  'Gen Alpha': '#0ea5e9',
-  'Gen Z': '#06b6d4',
-  'Millennials': '#10b981',
-  'Gen X': '#f59e0b',
-  'Boomer II': '#ec4899',
-  'Boomer I': '#8b5cf6',
+  'Gen Alpha': '#f9c5d5',
+  'Gen Z': '#c7ceea',
+  Millennials: '#b5ead7',
+  'Gen X': '#f6d6ad',
+  Boomers: '#d9c6f3',
 };
 
 interface AgeGroupChartProps {
@@ -20,7 +18,6 @@ interface AgeGroupChartProps {
 }
 
 export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
-  const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,25 +25,28 @@ export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
     const fetchData = async () => {
       if (!cityId) return;
 
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/demographics?cityId=${cityId}`);
         const result = await response.json();
 
         if (result.ageGroupData && result.ageGroupData.length > 0) {
-          const grouped = result.ageGroupData.reduce((acc: any, item: any) => {
-            const existing = acc.find((x: any) => x.ageGroup === item.ageGroup);
+          const grouped = result.ageGroupData.reduce((acc: any[], item: any) => {
+            const existing = acc.find((entry) => entry.ageGroup === item.ageGroup);
             if (existing) {
-              existing[item.generation] = item.count;
+              existing[item.generation] = item.value;
             } else {
               acc.push({
                 ageGroup: item.ageGroup,
-                [item.generation]: item.count,
+                [item.generation]: item.value,
               });
             }
             return acc;
           }, []);
 
           setData(grouped);
+        } else {
+          setData([]);
         }
       } catch (error) {
         console.error('Failed to fetch age group data:', error);
@@ -60,26 +60,22 @@ export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Population by Age Group & Generation</CardTitle>
+          <CardTitle className="text-base">Kelompok Usia & Generasi</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-96 bg-muted rounded-lg animate-pulse" />
+          <div className="h-96 rounded-lg bg-muted animate-pulse" />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Population by Age Group & Generation</CardTitle>
+          <CardTitle className="text-base">Kelompok Usia & Generasi</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
@@ -91,10 +87,10 @@ export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
                 contentStyle={{
                   backgroundColor: 'var(--card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '6px',
+                  borderRadius: '12px',
                 }}
                 labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => value.toLocaleString()}
+                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
               />
               <Legend />
               {Object.keys(GENERATION_COLORS).map((generation) => (
@@ -103,13 +99,13 @@ export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
                   dataKey={generation}
                   stackId="a"
                   fill={GENERATION_COLORS[generation]}
-                  radius={[8, 8, 0, 0]}
+                  radius={[10, 10, 0, 0]}
                 />
               ))}
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Grouped by age range and sub-grouped by generation
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Distribusi umur dibentuk langsung dari tabel fact memakai bucket usia.
           </p>
         </CardContent>
       </Card>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Home, Users2 } from 'lucide-react';
+import { Home, Soup, Users, Users2 } from 'lucide-react';
 
 interface DemographicsSummaryProps {
   cityId: number | null;
@@ -13,6 +13,7 @@ interface DemoData {
   totalPopulation: number;
   totalHouseholds: number;
   avgHouseholdSize: number;
+  averageMonthlyFoodExpenditure: number;
 }
 
 export function DemographicsSummary({ cityId }: DemographicsSummaryProps) {
@@ -23,20 +24,20 @@ export function DemographicsSummary({ cityId }: DemographicsSummaryProps) {
     const fetchData = async () => {
       if (!cityId) return;
 
+      setIsLoading(true);
       try {
-        const response = await fetch(
-          `/api/demographics?cityId=${cityId}`
-        );
+        const response = await fetch(`/api/demographics?cityId=${cityId}`);
         const result = await response.json();
 
         if (result.demographics) {
           setData({
             totalPopulation: result.demographics.totalPopulation,
             totalHouseholds: result.demographics.totalHouseholds,
-            avgHouseholdSize: parseFloat(
-              result.demographics.avgHouseholdSize
-            ),
+            avgHouseholdSize: Number(result.demographics.avgHouseholdSize),
+            averageMonthlyFoodExpenditure: Number(result.demographics.averageMonthlyFoodExpenditure),
           });
+        } else {
+          setData(null);
         }
       } catch (error) {
         console.error('Failed to fetch demographics:', error);
@@ -50,14 +51,14 @@ export function DemographicsSummary({ cityId }: DemographicsSummaryProps) {
 
   if (!data || isLoading) {
     return (
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Demographics</CardTitle>
+          <CardTitle className="text-base">Ringkasan Demografi</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="h-16 rounded-lg bg-muted animate-pulse" />
             ))}
           </div>
         </CardContent>
@@ -68,30 +69,31 @@ export function DemographicsSummary({ cityId }: DemographicsSummaryProps) {
   const stats = [
     {
       icon: Users,
-      label: 'Total Population',
-      value: data.totalPopulation.toLocaleString(),
+      label: 'Total Populasi',
+      value: data.totalPopulation.toLocaleString('id-ID'),
     },
     {
       icon: Home,
-      label: 'Total Households',
-      value: data.totalHouseholds.toLocaleString(),
+      label: 'Total Rumah Tangga',
+      value: data.totalHouseholds.toLocaleString('id-ID'),
     },
     {
       icon: Users2,
-      label: 'Avg Household Size',
+      label: 'Rata-rata Anggota KK',
       value: data.avgHouseholdSize.toFixed(2),
+    },
+    {
+      icon: Soup,
+      label: 'Rata-rata Belanja Makan / Bulan',
+      value: `Rp${Math.round(data.averageMonthlyFoodExpenditure).toLocaleString('id-ID')}`,
     },
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Demographics Summary</CardTitle>
+          <CardTitle className="text-base">Ringkasan Demografi</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -102,19 +104,15 @@ export function DemographicsSummary({ cityId }: DemographicsSummaryProps) {
                   key={stat.label}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  transition={{ delay: index * 0.08 }}
+                  className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-muted/60 to-secondary/40 p-3 transition-colors hover:from-muted hover:to-secondary/70"
                 >
-                  <div className="p-2 rounded-lg bg-primary/10">
+                  <div className="rounded-2xl bg-primary/12 p-2.5">
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">
-                      {stat.label}
-                    </p>
-                    <p className="font-bold text-lg text-foreground">
-                      {stat.value}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="text-lg font-bold text-foreground">{stat.value}</p>
                   </div>
                 </motion.div>
               );

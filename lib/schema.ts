@@ -1,7 +1,6 @@
 import {
   index,
   integer,
-  jsonb,
   pgTable,
   real,
   serial,
@@ -9,9 +8,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-// Users table
 export const users = pgTable(
-  "users",
+  "surveyor_users",
   {
     id: serial("id").primaryKey(),
     email: varchar("email", { length: 255 }).notNull().unique(),
@@ -25,12 +23,11 @@ export const users = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    emailIdx: index("users_email_idx").on(table.email),
+    emailIdx: index("surveyor_users_email_idx").on(table.email),
   }),
 );
 
-// Password reset tokens
-export const passwordResetTokens = pgTable("password_reset_tokens", {
+export const passwordResetTokens = pgTable("surveyor_password_reset_tokens", {
   id: serial("id").primaryKey(),
   userId: integer("user_id")
     .notNull()
@@ -40,9 +37,8 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-// Sessions (for cookie-based auth)
 export const sessions = pgTable(
-  "sessions",
+  "surveyor_sessions",
   {
     id: serial("id").primaryKey(),
     userId: integer("user_id")
@@ -53,168 +49,132 @@ export const sessions = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    sessionTokenIdx: index("sessions_token_idx").on(table.sessionToken),
+    sessionTokenIdx: index("surveyor_sessions_token_idx").on(table.sessionToken),
   }),
 );
 
-// Cities
-export const cities = pgTable(
-  "cities",
-  {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 255 }).notNull().unique(),
-    address: varchar("address", { length: 255 }).notNull(),
-    latitude: real("latitude").notNull(),
-    longitude: real("longitude").notNull(),
-    geojsonData: jsonb("geojson_data").notNull(),
-    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-  },
-  (table) => ({
-    nameIdx: index("cities_name_idx").on(table.name),
-  }),
-);
+export const genderMaster = pgTable("gender_master", {
+  id: serial("id").primaryKey(),
+  gender: varchar("gender", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
-// Demographics base data
-export const demographics = pgTable(
-  "demographics",
+export const maritalStatusMaster = pgTable("marital_status_master", {
+  id: serial("id").primaryKey(),
+  status: varchar("status", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const occupationStatusMaster = pgTable("occupation_status_master", {
+  id: serial("id").primaryKey(),
+  status: varchar("status", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const occupationTypeMaster = pgTable("occupation_type_master", {
+  id: serial("id").primaryKey(),
+  type: varchar("type", { length: 150 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const socioeconomyMaster = pgTable("socioeconomy_master", {
+  id: serial("id").primaryKey(),
+  className: varchar("class", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const educationMaster = pgTable("education_master", {
+  id: serial("id").primaryKey(),
+  grade: varchar("grade", { length: 50 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const monthlyIncomeMaster = pgTable("monthly_income_master", {
+  id: serial("id").primaryKey(),
+  income: varchar("income", { length: 50 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const housingStatusMaster = pgTable("housing_status_master", {
+  id: serial("id").primaryKey(),
+  status: varchar("status", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const foodPreferencesMaster = pgTable("food_preferences_master", {
+  id: serial("id").primaryKey(),
+  preference: varchar("preference", { length: 100 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const poiTypeMaster = pgTable("poi_type_master", {
+  id: serial("id").primaryKey(),
+  poi: varchar("poi", { length: 150 }).notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const surveyorPopulationFact = pgTable(
+  "surveyor_population_fact",
   {
     id: serial("id").primaryKey(),
-    cityId: integer("city_id")
+    noKk: varchar("no_kk", { length: 50 }).notNull().unique(),
+    jumlahAnggota: integer("jumlah_anggota").notNull(),
+    genderId: integer("gender_id")
       .notNull()
-      .references(() => cities.id, { onDelete: "cascade" }),
-    totalPopulation: integer("total_population").notNull(),
-    totalHouseholds: integer("total_households").notNull(),
-    avgHouseholdSize: real("avg_household_size").notNull(),
+      .references(() => genderMaster.id),
+    usia: integer("usia").notNull(),
+    housingStatusId: integer("housing_status_id")
+      .notNull()
+      .references(() => housingStatusMaster.id),
+    kecamatan: varchar("kecamatan", { length: 150 }).notNull(),
+    kabkotId: integer("kabkot_id").notNull(),
+    maritalStatusId: integer("marital_status_id")
+      .notNull()
+      .references(() => maritalStatusMaster.id),
+    educationId: integer("education_id")
+      .notNull()
+      .references(() => educationMaster.id),
+    occupationStatusId: integer("occupation_status_id")
+      .notNull()
+      .references(() => occupationStatusMaster.id),
+    occupationTypeId: integer("occupation_type_id")
+      .notNull()
+      .references(() => occupationTypeMaster.id),
+    monthlyIncomeId: integer("monthly_income_id")
+      .notNull()
+      .references(() => monthlyIncomeMaster.id),
+    foodPreferenceId: integer("food_preference_id")
+      .notNull()
+      .references(() => foodPreferencesMaster.id),
+    monthlyFoodExpenditure: real("monthly_food_expenditure").notNull(),
+    socioclassId: integer("socioclass_id")
+      .notNull()
+      .references(() => socioeconomyMaster.id),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    cityIdIdx: index("demographics_city_idx").on(table.cityId),
+    kecamatanIdx: index("surveyor_population_fact_kecamatan_idx").on(
+      table.kecamatan,
+    ),
+    kabkotIdx: index("surveyor_population_fact_kabkot_idx").on(table.kabkotId),
+    genderIdx: index("surveyor_population_fact_gender_idx").on(table.genderId),
+    maritalIdx: index("surveyor_population_fact_marital_idx").on(
+      table.maritalStatusId,
+    ),
   }),
 );
 
-// Gender breakdown
-export const genderBreakdown = pgTable("gender_breakdown", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  male: integer("male").notNull(),
-  female: integer("female").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Marital status breakdown
-export const maritalStatusBreakdown = pgTable("marital_status_breakdown", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  married: integer("married").notNull(),
-  single: integer("single").notNull(),
-  widow: integer("widow").notNull(),
-  divorced: integer("divorced").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Occupation status breakdown
-export const occupationStatusBreakdown = pgTable("occupation_status_breakdown", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  employed: integer("employed").notNull(),
-  unemployed: integer("unemployed").notNull(),
-  student: integer("student").notNull(),
-  retired: integer("retired").notNull(),
-  other: integer("other").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Job occupations
-export const jobOccupations = pgTable("job_occupations", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  occupation: varchar("occupation", { length: 255 }).notNull(),
-  count: integer("count").notNull(),
-  percentage: real("percentage").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Age groups with generation data
-export const ageGroupData = pgTable("age_group_data", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  ageGroup: varchar("age_group", { length: 50 }).notNull(),
-  generation: varchar("generation", { length: 50 }).notNull(),
-  count: integer("count").notNull(),
-  percentage: real("percentage").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Socioeconomic data
-export const socioeconomicData = pgTable("socioeconomic_data", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  category: varchar("category", { length: 255 }).notNull(),
-  value: integer("value").notNull(),
-  percentage: real("percentage").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Income data
-export const incomeData = pgTable("income_data", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  incomeRange: varchar("income_range", { length: 255 }).notNull(),
-  count: integer("count").notNull(),
-  percentage: real("percentage").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Food expenditure data
-export const foodExpenditureData = pgTable("food_expenditure_data", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  category: varchar("category", { length: 255 }).notNull(),
-  amount: real("amount").notNull(),
-  percentage: real("percentage").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Points of Interest (POI)
-export const pointsOfInterest = pgTable("points_of_interest", {
-  id: serial("id").primaryKey(),
-  cityId: integer("city_id")
-    .notNull()
-    .references(() => cities.id, { onDelete: "cascade" }),
-  poiType: varchar("poi_type", { length: 100 }).notNull(),
-  count: integer("count").notNull(),
-  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
-});
-
-// Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
-export type City = typeof cities.$inferSelect;
-export type InsertCity = typeof cities.$inferInsert;
-export type Demographics = typeof demographics.$inferSelect;
-export type GenderBreakdown = typeof genderBreakdown.$inferSelect;
-export type MaritalStatusBreakdown = typeof maritalStatusBreakdown.$inferSelect;
-export type OccupationStatusBreakdown = typeof occupationStatusBreakdown.$inferSelect;
-export type JobOccupation = typeof jobOccupations.$inferSelect;
-export type AgeGroupData = typeof ageGroupData.$inferSelect;
-export type SocioeconomicData = typeof socioeconomicData.$inferSelect;
-export type IncomeData = typeof incomeData.$inferSelect;
-export type FoodExpenditureData = typeof foodExpenditureData.$inferSelect;
-export type PointOfInterest = typeof pointsOfInterest.$inferSelect;
+export type GenderMaster = typeof genderMaster.$inferSelect;
+export type MaritalStatusMaster = typeof maritalStatusMaster.$inferSelect;
+export type OccupationStatusMaster = typeof occupationStatusMaster.$inferSelect;
+export type OccupationTypeMaster = typeof occupationTypeMaster.$inferSelect;
+export type SocioeconomyMaster = typeof socioeconomyMaster.$inferSelect;
+export type EducationMaster = typeof educationMaster.$inferSelect;
+export type MonthlyIncomeMaster = typeof monthlyIncomeMaster.$inferSelect;
+export type HousingStatusMaster = typeof housingStatusMaster.$inferSelect;
+export type FoodPreferencesMaster = typeof foodPreferencesMaster.$inferSelect;
+export type PoiTypeMaster = typeof poiTypeMaster.$inferSelect;
+export type SurveyorPopulationFact = typeof surveyorPopulationFact.$inferSelect;
+export type InsertSurveyorPopulationFact = typeof surveyorPopulationFact.$inferInsert;

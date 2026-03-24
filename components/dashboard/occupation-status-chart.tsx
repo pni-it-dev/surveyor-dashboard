@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
-const COLORS = ['#0ea5e9', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+const COLORS = ['#b5ead7', '#c7ceea', '#f6d6ad', '#f9c5d5', '#d9c6f3'];
 
 interface OccupationStatusChartProps {
   cityId: number | null;
@@ -21,20 +21,11 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
     const fetchData = async () => {
       if (!cityId) return;
 
+      setIsLoading(true);
       try {
         const response = await fetch(`/api/demographics?cityId=${cityId}`);
         const result = await response.json();
-
-        if (result.occupationStatusBreakdown && result.occupationStatusBreakdown.length > 0) {
-          const status = result.occupationStatusBreakdown[0];
-          setData([
-            { name: 'Employed', value: status.employed },
-            { name: 'Unemployed', value: status.unemployed },
-            { name: 'Student', value: status.student },
-            { name: 'Retired', value: status.retired },
-            { name: 'Other', value: status.other },
-          ]);
-        }
+        setData(result.occupationStatusBreakdown ?? []);
       } catch (error) {
         console.error('Failed to fetch occupation status data:', error);
       } finally {
@@ -47,7 +38,7 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
 
   const handlePieClick = (entry: any) => {
     const newStatuses = filters.selectedOccupationStatus.includes(entry.name)
-      ? filters.selectedOccupationStatus.filter((s) => s !== entry.name)
+      ? filters.selectedOccupationStatus.filter((status) => status !== entry.name)
       : [...filters.selectedOccupationStatus, entry.name];
 
     updateFilter('selectedOccupationStatus', newStatuses);
@@ -55,26 +46,22 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
 
   if (isLoading) {
     return (
-      <Card className="border-border/50">
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Population by Occupation Status</CardTitle>
+          <CardTitle className="text-base">Status Pekerjaan</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 bg-muted rounded-lg animate-pulse" />
+          <div className="h-80 rounded-lg bg-muted animate-pulse" />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <Card className="border-border/50 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base">Population by Occupation Status</CardTitle>
+          <CardTitle className="text-base">Status Pekerjaan</CardTitle>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
@@ -85,21 +72,20 @@ export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
                 cy="50%"
                 labelLine={false}
                 label={({ name }) => name}
-                outerRadius={80}
-                fill="#8884d8"
+                outerRadius={88}
                 dataKey="value"
                 onClick={(entry) => handlePieClick(entry)}
                 cursor="pointer"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => value.toLocaleString()} />
+              <Tooltip formatter={(value: any) => Number(value).toLocaleString('id-ID')} />
             </PieChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Click on a section to filter by occupation status
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Klik potongan chart untuk filter status pekerjaan.
           </p>
         </CardContent>
       </Card>

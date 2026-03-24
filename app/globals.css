@@ -4,76 +4,74 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Light theme - Dove color palette */
-  --background: #fafaf8;
-  --foreground: #3a3a38;
-  --card: #f5f3f0;
-  --card-foreground: #3a3a38;
-  --popover: #ffffff;
-  --popover-foreground: #3a3a38;
-  --primary: #7c8d99;
+  --background: #fff8fb;
+  --foreground: #4f4761;
+  --card: #fffdfd;
+  --card-foreground: #4f4761;
+  --popover: #fffdfd;
+  --popover-foreground: #4f4761;
+  --primary: #a98ecb;
   --primary-foreground: #ffffff;
-  --secondary: #e8e6e1;
-  --secondary-foreground: #3a3a38;
-  --muted: #d4cfc7;
-  --muted-foreground: #6f6f6d;
-  --accent: #a59b8f;
-  --accent-foreground: #ffffff;
-  --destructive: #dc2626;
+  --secondary: #ffe8ef;
+  --secondary-foreground: #5e536f;
+  --muted: #f8eef5;
+  --muted-foreground: #84788f;
+  --accent: #b7e3da;
+  --accent-foreground: #365a54;
+  --destructive: #e97b86;
   --destructive-foreground: #ffffff;
-  --border: #e0d9d0;
-  --input: #f0ede8;
-  --ring: #7c8d99;
-  --chart-1: #9ba8b5;
-  --chart-2: #a59b8f;
-  --chart-3: #8a9c9e;
-  --chart-4: #b5a89c;
-  --chart-5: #9ca8a3;
-  --radius: 0.625rem;
-  --sidebar: #f5f3f0;
-  --sidebar-foreground: #3a3a38;
-  --sidebar-primary: #7c8d99;
+  --border: #efdbe8;
+  --input: #fffafb;
+  --ring: #c0a6e3;
+  --chart-1: #f5a9c2;
+  --chart-2: #c9b6f4;
+  --chart-3: #96d8c8;
+  --chart-4: #f6c78f;
+  --chart-5: #89c7eb;
+  --radius: 0.875rem;
+  --sidebar: #fff7fb;
+  --sidebar-foreground: #4f4761;
+  --sidebar-primary: #a98ecb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #a59b8f;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #e0d9d0;
-  --sidebar-ring: #7c8d99;
+  --sidebar-accent: #b7e3da;
+  --sidebar-accent-foreground: #365a54;
+  --sidebar-border: #efdbe8;
+  --sidebar-ring: #c0a6e3;
 }
 
 .dark {
-  /* Dark theme - Dove color palette */
-  --background: #18181b;
-  --foreground: #f5f1ed;
-  --card: #27242e;
-  --card-foreground: #f5f1ed;
-  --popover: #2a272f;
-  --popover-foreground: #f5f1ed;
-  --primary: #8a9c9e;
-  --primary-foreground: #18181b;
-  --secondary: #38353f;
-  --secondary-foreground: #f5f1ed;
-  --muted: #4a474f;
-  --muted-foreground: #b8b4af;
-  --accent: #a59b8f;
-  --accent-foreground: #18181b;
-  --destructive: #f87171;
-  --destructive-foreground: #18181b;
-  --border: #45414a;
-  --input: #35323b;
-  --ring: #8a9c9e;
-  --chart-1: #8a9c9e;
-  --chart-2: #a59b8f;
-  --chart-3: #b5a89c;
-  --chart-4: #9ba8b5;
-  --chart-5: #9ca8a3;
-  --sidebar: #27242e;
-  --sidebar-foreground: #f5f1ed;
-  --sidebar-primary: #8a9c9e;
-  --sidebar-primary-foreground: #18181b;
-  --sidebar-accent: #a59b8f;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #45414a;
-  --sidebar-ring: #8a9c9e;
+  --background: #241f34;
+  --foreground: #f8edf7;
+  --card: #312946;
+  --card-foreground: #f8edf7;
+  --popover: #312946;
+  --popover-foreground: #f8edf7;
+  --primary: #d3b7f6;
+  --primary-foreground: #2d2540;
+  --secondary: #403356;
+  --secondary-foreground: #f8edf7;
+  --muted: #493a62;
+  --muted-foreground: #d3c8df;
+  --accent: #8cd6c5;
+  --accent-foreground: #173c36;
+  --destructive: #ff9aa7;
+  --destructive-foreground: #2d2540;
+  --border: #56466f;
+  --input: #3a2f51;
+  --ring: #d3b7f6;
+  --chart-1: #ffb3c7;
+  --chart-2: #d7c1ff;
+  --chart-3: #9fe6d6;
+  --chart-4: #ffd7a6;
+  --chart-5: #9fd6f4;
+  --sidebar: #2c2440;
+  --sidebar-foreground: #f8edf7;
+  --sidebar-primary: #d3b7f6;
+  --sidebar-primary-foreground: #2d2540;
+  --sidebar-accent: #8cd6c5;
+  --sidebar-accent-foreground: #173c36;
+  --sidebar-border: #56466f;
+  --sidebar-ring: #d3b7f6;
 }
 
 @theme inline {
@@ -121,7 +119,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    background:
+      radial-gradient(circle at top left, rgba(255, 210, 229, 0.6), transparent 30%),
+      radial-gradient(circle at top right, rgba(183, 227, 218, 0.45), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(201, 182, 244, 0.35), transparent 25%),
+      var(--background);
+    @apply text-foreground;
   }
 }
