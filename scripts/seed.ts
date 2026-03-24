@@ -1,326 +1,302 @@
 import { db } from "../lib/db";
 import {
-  cities,
-  demographics,
-  genderBreakdown,
-  maritalStatusBreakdown,
-  occupationStatusBreakdown,
-  jobOccupations,
-  ageGroupData,
-  socioeconomicData,
-  incomeData,
-  foodExpenditureData,
-  pointsOfInterest,
+  foodPreferencesMaster,
+  genderMaster,
+  housingStatusMaster,
+  educationMaster,
+  maritalStatusMaster,
+  monthlyIncomeMaster,
+  occupationStatusMaster,
+  occupationTypeMaster,
+  poiTypeMaster,
+  socioeconomyMaster,
+  surveyorKabkotGeojson,
+  surveyorPopulationFact,
 } from "../lib/schema";
-import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
-interface CityData {
-  name: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  geojson: any;
-}
+const masterSeedData = {
+  gender: [
+    { id: 1, gender: "LAKI LAKI" },
+    { id: 2, gender: "PEREMPUAN" },
+  ],
+  maritalStatus: [
+    { id: 1, status: "LAJANG" },
+    { id: 2, status: "MENIKAH" },
+    { id: 3, status: "JANDA / DUDA" },
+    { id: 4, status: "CERAI MATI" },
+  ],
+  occupationStatus: [
+    { id: 1, status: "BEKERJA" },
+    { id: 2, status: "TIDAK BEKERJA" },
+    { id: 3, status: "PELAJAR" },
+    { id: 4, status: "PENSIUNAN" },
+    { id: 5, status: "LAINNYA" },
+  ],
+  occupationType: [
+    { id: 1, type: "Sains dan Teknologi" },
+    { id: 2, type: "FnB dan Retail" },
+    { id: 3, type: "Agrikultur" },
+    { id: 4, type: "Seni Budaya" },
+    { id: 5, type: "Kesahatan" },
+    { id: 6, type: "Bisnis dan Manajemen" },
+    { id: 7, type: "Pendidikan" },
+    { id: 8, type: "Lingkungan dan Energi" },
+    { id: 9, type: "Industri dan Manufaktur" },
+    { id: 10, type: "Teknik dan Rekayasa" },
+    { id: 11, type: "Sosial dan Politik" },
+    { id: 12, type: "Kegamaan" },
+    { id: 13, type: "Ketatanegaraan dan Sipil" },
+    { id: 14, type: "Aparat Hukum dan Militer" },
+    { id: 15, type: "Lainnya" },
+  ],
+  socioeconomy: [
+    { id: 1, className: "Atas" },
+    { id: 2, className: "Menengah Atas" },
+    { id: 3, className: "Menengah" },
+    { id: 4, className: "Menengah Bawah" },
+    { id: 5, className: "Bawah" },
+  ],
+  education: [
+    { id: 1, grade: "SD" },
+    { id: 2, grade: "SMP" },
+    { id: 3, grade: "SLTA" },
+    { id: 4, grade: "DIPLOMA" },
+    { id: 5, grade: "S1" },
+    { id: 6, grade: "S2" },
+    { id: 7, grade: "S3" },
+  ],
+  monthlyIncome: [
+    { id: 1, income: "< 3jt" },
+    { id: 2, income: "3jt - 5jt" },
+    { id: 3, income: "5jt - 10jt" },
+    { id: 4, income: "10jt - 15jt" },
+    { id: 5, income: "15jt+" },
+  ],
+  housingStatus: [
+    { id: 1, status: "Rumah Pribadi" },
+    { id: 2, status: "Rumah Sewa / Kontrak" },
+    { id: 3, status: "Rumah Orang Tua" },
+    { id: 4, status: "Rumah Dinas" },
+    { id: 5, status: "Apartemen" },
+  ],
+  foodPreferences: [
+    { id: 1, preference: "Masakan Cepat Saji" },
+    { id: 2, preference: "Masakan Jalanan" },
+    { id: 3, preference: "Masakan Rumahan" },
+    { id: 4, preference: "Restaurant" },
+  ],
+  poiTypes: [
+    { id: 1, poi: "Toko dan Retail" },
+    { id: 2, poi: "FnB" },
+    { id: 3, poi: "Pendidikan" },
+    { id: 4, poi: "Perkantoran dan Komersil" },
+    { id: 5, poi: "Fasilitas Publik" },
+    { id: 6, poi: "Manufaktur" },
+    { id: 7, poi: "Otomotif dan Jasa" },
+    { id: 8, poi: "Taman dan Rekreasi" },
+    { id: 9, poi: "Hiburan Umum" },
+    { id: 10, poi: "Hiburan Dewasa" },
+    { id: 11, poi: "Pom Bensin" },
+    { id: 12, poi: "Rumah Sakit" },
+    { id: 13, poi: "Hotel dan Penginapan" },
+    { id: 14, poi: "Transportasi dan Pemberhentian" },
+    { id: 15, poi: "Fasilitas Olahraga dan Gelanggang" },
+  ],
+};
 
-const CITIES_DATA: CityData[] = [
+
+const geojsonSeedData = [
   {
-    name: "Jakarta",
-    address: "Central Jakarta, Indonesia",
-    latitude: -6.2088,
-    longitude: 106.8456,
+    id: 3171,
+    name: "JAKARTA SELATAN",
     geojson: {
       type: "Feature",
+      properties: { regionCode: 3171, regionName: "JAKARTA SELATAN" },
       geometry: {
         type: "Polygon",
-        coordinates: [
-          [
-            [106.7, -6.3],
-            [106.9, -6.3],
-            [106.9, -6.1],
-            [106.7, -6.1],
-            [106.7, -6.3],
-          ],
-        ],
+        coordinates: [[[106.775,-6.305],[106.86,-6.305],[106.86,-6.22],[106.775,-6.22],[106.775,-6.305]]],
       },
-      properties: { name: "Jakarta" },
     },
   },
   {
-    name: "Surabaya",
-    address: "East Java, Indonesia",
-    latitude: -7.2504,
-    longitude: 112.7488,
+    id: 3578,
+    name: "KOTA SURABAYA",
     geojson: {
       type: "Feature",
+      properties: { regionCode: 3578, regionName: "KOTA SURABAYA" },
       geometry: {
         type: "Polygon",
-        coordinates: [
-          [
-            [112.6, -7.35],
-            [112.85, -7.35],
-            [112.85, -7.15],
-            [112.6, -7.15],
-            [112.6, -7.35],
-          ],
-        ],
+        coordinates: [[[112.705,-7.34],[112.79,-7.34],[112.79,-7.255],[112.705,-7.255],[112.705,-7.34]]],
       },
-      properties: { name: "Surabaya" },
     },
   },
   {
-    name: "Bandung",
-    address: "West Java, Indonesia",
-    latitude: -6.9175,
-    longitude: 107.6062,
+    id: 3273,
+    name: "KOTA BANDUNG",
     geojson: {
       type: "Feature",
+      properties: { regionCode: 3273, regionName: "KOTA BANDUNG" },
       geometry: {
         type: "Polygon",
-        coordinates: [
-          [
-            [107.5, -7.0],
-            [107.7, -7.0],
-            [107.7, -6.8],
-            [107.5, -6.8],
-            [107.5, -7.0],
-          ],
-        ],
+        coordinates: [[[107.565,-6.93],[107.665,-6.93],[107.665,-6.84],[107.565,-6.84],[107.565,-6.93]]],
       },
-      properties: { name: "Bandung" },
     },
   },
 ];
 
-async function seedCity(cityData: CityData) {
-  try {
-    // Check if city already exists
-    const existingCity = await db
-      .select()
-      .from(cities)
-      .where(eq(cities.name, cityData.name))
-      .limit(1);
+const AREA_BLUEPRINTS = [
+  {
+    kecamatan: "Kebayoran Baru",
+    kabkotId: 3171,
+    baseNoKk: "317101",
+    records: [
+      [4, 2, 35, 1, 2, 5, 1, 6, 4, 2, 1200000],
+      [3, 1, 22, 2, 1, 3, 3, 7, 2, 4, 900000],
+      [5, 2, 41, 1, 2, 5, 1, 1, 5, 3, 1450000],
+      [2, 1, 67, 1, 4, 1, 4, 15, 2, 3, 650000],
+      [4, 2, 29, 2, 2, 4, 1, 2, 1, 2, 1000000],
+      [3, 1, 18, 3, 1, 3, 3, 7, 1, 2, 700000],
+      [6, 2, 52, 1, 2, 6, 1, 10, 3, 3, 1600000],
+      [4, 1, 38, 2, 2, 5, 1, 4, 4, 4, 1150000],
+      [3, 2, 31, 5, 2, 4, 2, 11, 2, 2, 850000],
+      [5, 1, 44, 1, 2, 5, 1, 14, 3, 3, 1400000],
+      [2, 2, 24, 2, 1, 5, 2, 6, 1, 1, 780000],
+      [4, 1, 15, 3, 1, 3, 3, 7, 4, 2, 720000],
+    ],
+  },
+  {
+    kecamatan: "Gubeng",
+    kabkotId: 3578,
+    baseNoKk: "357801",
+    records: [
+      [4, 1, 33, 1, 2, 5, 1, 6, 3, 3, 980000],
+      [3, 2, 27, 2, 1, 4, 1, 2, 2, 2, 760000],
+      [5, 1, 46, 1, 2, 3, 1, 9, 3, 3, 1200000],
+      [2, 2, 61, 3, 3, 1, 4, 15, 4, 3, 610000],
+      [4, 1, 20, 3, 1, 3, 3, 7, 1, 2, 680000],
+      [3, 2, 35, 2, 2, 4, 1, 1, 2, 4, 930000],
+      [5, 1, 54, 1, 2, 5, 1, 10, 4, 3, 1260000],
+      [4, 2, 40, 1, 2, 5, 1, 11, 3, 3, 1090000],
+      [3, 1, 24, 5, 1, 4, 2, 6, 1, 1, 740000],
+      [6, 2, 48, 1, 2, 5, 1, 14, 4, 3, 1380000],
+      [2, 1, 17, 3, 1, 3, 3, 7, 1, 2, 650000],
+      [4, 2, 30, 2, 2, 5, 2, 4, 2, 2, 870000],
+    ],
+  },
+  {
+    kecamatan: "Coblong",
+    kabkotId: 3273,
+    baseNoKk: "327301",
+    records: [
+      [4, 2, 37, 1, 2, 5, 1, 1, 3, 3, 1020000],
+      [3, 1, 23, 2, 1, 4, 2, 7, 2, 2, 790000],
+      [5, 2, 45, 1, 2, 5, 1, 6, 4, 4, 1320000],
+      [2, 1, 64, 1, 3, 1, 4, 15, 4, 3, 600000],
+      [4, 2, 28, 2, 1, 5, 1, 2, 2, 2, 910000],
+      [3, 1, 19, 3, 1, 3, 3, 7, 1, 2, 700000],
+      [5, 2, 51, 1, 2, 5, 1, 10, 3, 3, 1410000],
+      [4, 1, 39, 2, 2, 4, 1, 11, 3, 3, 1110000],
+      [3, 2, 26, 5, 1, 4, 2, 6, 1, 1, 760000],
+      [6, 1, 43, 1, 2, 5, 1, 14, 4, 4, 1490000],
+      [2, 2, 21, 3, 1, 3, 3, 7, 1, 2, 670000],
+      [4, 1, 34, 2, 2, 5, 2, 4, 2, 3, 890000],
+    ],
+  },
+] as const;
 
-    if (existingCity.length > 0) {
-      console.log(`[SEED] City "${cityData.name}" already exists, skipping...`);
-      return existingCity[0];
-    }
+function buildPopulationFacts() {
+  return AREA_BLUEPRINTS.flatMap((area) =>
+    area.records.map((record, index) => ({
+      noKk: `${area.baseNoKk}${String(index + 1).padStart(4, "0")}`,
+      jumlahAnggota: record[0],
+      genderId: record[1],
+      usia: record[2],
+      housingStatusId: record[3],
+      kecamatan: area.kecamatan,
+      kabkotId: area.kabkotId,
+      maritalStatusId: record[4],
+      educationId: record[5],
+      occupationStatusId: record[6],
+      occupationTypeId: record[7],
+      monthlyIncomeId: record[8],
+      foodPreferenceId: record[9],
+      monthlyFoodExpenditure: record[10],
+      socioclassId: deriveSocioClassId(record[8]),
+    })),
+  );
+}
 
-    // Insert city
-    const [newCity] = await db
-      .insert(cities)
-      .values({
-        name: cityData.name,
-        address: cityData.address,
-        latitude: cityData.latitude,
-        longitude: cityData.longitude,
-        geojsonData: cityData.geojson,
-      })
-      .returning();
-
-    console.log(`[SEED] Created city: ${cityData.name}`);
-
-    // Seed demographics for this city
-    const totalPopulation = Math.floor(Math.random() * 3000000) + 500000;
-    const totalHouseholds = Math.floor(totalPopulation / 4);
-    const avgHouseholdSize = (totalPopulation / totalHouseholds).toFixed(2);
-
-    await db
-      .insert(demographics)
-      .values({
-        cityId: newCity.id,
-        totalPopulation,
-        totalHouseholds,
-        avgHouseholdSize: Number(avgHouseholdSize),
-      })
-      .returning();
-
-    // Seed gender breakdown
-    const malePopulation = Math.floor(totalPopulation * 0.48);
-    const femalePopulation = totalPopulation - malePopulation;
-
-    await db.insert(genderBreakdown).values({
-      cityId: newCity.id,
-      male: malePopulation,
-      female: femalePopulation,
-    });
-
-    // Seed marital status
-    const married = Math.floor(totalPopulation * 0.45);
-    const single = Math.floor(totalPopulation * 0.35);
-    const widow = Math.floor(totalPopulation * 0.12);
-    const divorced = totalPopulation - married - single - widow;
-
-    await db.insert(maritalStatusBreakdown).values({
-      cityId: newCity.id,
-      married,
-      single,
-      widow,
-      divorced,
-    });
-
-    // Seed occupation status
-    const employed = Math.floor(totalPopulation * 0.55);
-    const unemployed = Math.floor(totalPopulation * 0.08);
-    const student = Math.floor(totalPopulation * 0.15);
-    const retired = Math.floor(totalPopulation * 0.12);
-    const otherOccupation =
-      totalPopulation - employed - unemployed - student - retired;
-
-    await db.insert(occupationStatusBreakdown).values({
-      cityId: newCity.id,
-      employed,
-      unemployed,
-      student,
-      retired,
-      other: otherOccupation,
-    });
-
-    // Seed job occupations
-    const jobOccupationList = [
-      { name: "Farmer", percentage: 15 },
-      { name: "Tech Professional", percentage: 18 },
-      { name: "Retail/Sales", percentage: 16 },
-      { name: "Health Worker", percentage: 12 },
-      { name: "Entrepreneur", percentage: 14 },
-      { name: "Manufacturing", percentage: 10 },
-      { name: "Education", percentage: 9 },
-      { name: "Finance", percentage: 6 },
-    ];
-
-    for (const job of jobOccupationList) {
-      const count = Math.floor(employed * (job.percentage / 100));
-      await db.insert(jobOccupations).values({
-        cityId: newCity.id,
-        occupation: job.name,
-        count,
-        percentage: job.percentage,
-      });
-    }
-
-    // Seed age group data
-    const ageGroups = [
-      { group: "0-4", generation: "Gen Alpha", percentage: 6 },
-      { group: "5-9", generation: "Gen Alpha", percentage: 7 },
-      { group: "10-14", generation: "Gen Z", percentage: 7 },
-      { group: "15-19", generation: "Gen Z", percentage: 8 },
-      { group: "20-24", generation: "Gen Z", percentage: 9 },
-      { group: "25-29", generation: "Millennials", percentage: 10 },
-      { group: "30-34", generation: "Millennials", percentage: 10 },
-      { group: "35-39", generation: "Millennials", percentage: 9 },
-      { group: "40-44", generation: "Gen X", percentage: 8 },
-      { group: "45-49", generation: "Gen X", percentage: 7 },
-      { group: "50-54", generation: "Gen X", percentage: 6 },
-      { group: "55-59", generation: "Boomer II", percentage: 4 },
-      { group: "60-64", generation: "Boomer II", percentage: 2 },
-      { group: "65-69", generation: "Boomer I", percentage: 2 },
-      { group: ">70", generation: "Boomer I", percentage: 2 },
-    ];
-
-    for (const ag of ageGroups) {
-      const count = Math.floor(totalPopulation * (ag.percentage / 100));
-      await db.insert(ageGroupData).values({
-        cityId: newCity.id,
-        ageGroup: ag.group,
-        generation: ag.generation,
-        count,
-        percentage: ag.percentage,
-      });
-    }
-
-    // Seed socioeconomic data
-    const socioeconomic = [
-      { category: "Low Income", percentage: 25 },
-      { category: "Lower Middle", percentage: 30 },
-      { category: "Middle Income", percentage: 30 },
-      { category: "Upper Middle", percentage: 12 },
-      { category: "High Income", percentage: 3 },
-    ];
-
-    for (const se of socioeconomic) {
-      const value = Math.floor(totalHouseholds * (se.percentage / 100));
-      await db.insert(socioeconomicData).values({
-        cityId: newCity.id,
-        category: se.category,
-        value,
-        percentage: se.percentage,
-      });
-    }
-
-    // Seed income data
-    const incomes = [
-      { range: "< $500", percentage: 20 },
-      { range: "$500-$1000", percentage: 25 },
-      { range: "$1000-$2000", percentage: 30 },
-      { range: "$2000-$5000", percentage: 18 },
-      { range: "> $5000", percentage: 7 },
-    ];
-
-    for (const income of incomes) {
-      const count = Math.floor(totalHouseholds * (income.percentage / 100));
-      await db.insert(incomeData).values({
-        cityId: newCity.id,
-        incomeRange: income.range,
-        count,
-        percentage: income.percentage,
-      });
-    }
-
-    // Seed food expenditure
-    const foodExpenditure = [
-      { category: "Staple Foods", amount: 150, percentage: 30 },
-      { category: "Vegetables & Fruits", amount: 100, percentage: 20 },
-      { category: "Meat & Protein", amount: 120, percentage: 24 },
-      { category: "Beverages", amount: 80, percentage: 16 },
-      { category: "Other Food", amount: 50, percentage: 10 },
-    ];
-
-    for (const fe of foodExpenditure) {
-      await db.insert(foodExpenditureData).values({
-        cityId: newCity.id,
-        category: fe.category,
-        amount: fe.amount,
-        percentage: fe.percentage,
-      });
-    }
-
-    // Seed points of interest
-    const pois = [
-      { type: "Retail Store", count: Math.floor(Math.random() * 500) + 100 },
-      { type: "Restaurant", count: Math.floor(Math.random() * 400) + 80 },
-      { type: "Hotel", count: Math.floor(Math.random() * 200) + 20 },
-      { type: "Hospital", count: Math.floor(Math.random() * 50) + 10 },
-      { type: "Gas Station", count: Math.floor(Math.random() * 150) + 30 },
-      { type: "Bank", count: Math.floor(Math.random() * 100) + 20 },
-      { type: "School", count: Math.floor(Math.random() * 200) + 50 },
-      { type: "Park", count: Math.floor(Math.random() * 80) + 15 },
-      { type: "Shopping Mall", count: Math.floor(Math.random() * 30) + 5 },
-      { type: "Movie Theater", count: Math.floor(Math.random() * 20) + 2 },
-    ];
-
-    for (const poi of pois) {
-      await db.insert(pointsOfInterest).values({
-        cityId: newCity.id,
-        poiType: poi.type,
-        count: poi.count,
-      });
-    }
-
-    console.log(`[SEED] Seeded all data for city: ${cityData.name}`);
-    return newCity;
-  } catch (error) {
-    console.error(`[SEED] Error seeding city ${cityData.name}:`, error);
-    throw error;
+function deriveSocioClassId(monthlyIncomeId: number) {
+  switch (monthlyIncomeId) {
+    case 5:
+      return 1;
+    case 4:
+      return 2;
+    case 3:
+      return 3;
+    case 2:
+      return 4;
+    default:
+      return 5;
   }
+}
+
+async function resetSequence(tableName: string) {
+  await db.execute(
+    sql.raw(
+      `SELECT setval(pg_get_serial_sequence('${tableName}', 'id'), COALESCE((SELECT MAX(id) FROM ${tableName}), 1), true);`,
+    ),
+  );
 }
 
 async function main() {
   try {
     console.log("[SEED] Starting database seed...");
 
-    for (const cityData of CITIES_DATA) {
-      await seedCity(cityData);
-    }
+    await db.delete(surveyorPopulationFact);
+    await db.delete(poiTypeMaster);
+    await db.delete(foodPreferencesMaster);
+    await db.delete(housingStatusMaster);
+    await db.delete(monthlyIncomeMaster);
+    await db.delete(educationMaster);
+    await db.delete(socioeconomyMaster);
+    await db.delete(occupationTypeMaster);
+    await db.delete(occupationStatusMaster);
+    await db.delete(maritalStatusMaster);
+    await db.delete(genderMaster);
+    await db.delete(surveyorKabkotGeojson);
 
+    await db.insert(genderMaster).values(masterSeedData.gender);
+    await db.insert(maritalStatusMaster).values(masterSeedData.maritalStatus);
+    await db.insert(occupationStatusMaster).values(masterSeedData.occupationStatus);
+    await db.insert(occupationTypeMaster).values(masterSeedData.occupationType);
+    await db.insert(socioeconomyMaster).values(masterSeedData.socioeconomy);
+    await db.insert(educationMaster).values(masterSeedData.education);
+    await db.insert(monthlyIncomeMaster).values(masterSeedData.monthlyIncome);
+    await db.insert(housingStatusMaster).values(masterSeedData.housingStatus);
+    await db.insert(foodPreferencesMaster).values(masterSeedData.foodPreferences);
+    await db.insert(poiTypeMaster).values(masterSeedData.poiTypes);
+    await db.insert(surveyorKabkotGeojson).values(geojsonSeedData);
+
+    const populationFacts = buildPopulationFacts();
+    await db.insert(surveyorPopulationFact).values(populationFacts);
+
+    await Promise.all([
+      resetSequence("gender_master"),
+      resetSequence("marital_status_master"),
+      resetSequence("occupation_status_master"),
+      resetSequence("occupation_type_master"),
+      resetSequence("socioeconomy_master"),
+      resetSequence("education_master"),
+      resetSequence("monthly_income_master"),
+      resetSequence("housing_status_master"),
+      resetSequence("food_preferences_master"),
+      resetSequence("poi_type_master"),
+      resetSequence("surveyor_population_fact"),
+    ]);
+
+    console.log(`[SEED] Inserted ${populationFacts.length} fact records.`);
     console.log("[SEED] Database seed completed successfully!");
   } catch (error) {
     console.error("[SEED] Seed failed:", error);

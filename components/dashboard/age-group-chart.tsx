@@ -1,116 +1,64 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useFilters } from '@/lib/filter-context';
 
-const GENERATION_COLORS: { [key: string]: string } = {
+const GENERATION_COLORS: Record<string, string> = {
   'Gen Alpha': '#0ea5e9',
-  'Gen Z': '#06b6d4',
-  'Millennials': '#10b981',
+  'Gen Z': '#3b82f6',
+  Millennials: '#10b981',
   'Gen X': '#f59e0b',
-  'Boomer II': '#ec4899',
-  'Boomer I': '#8b5cf6',
+  Boomers: '#dc2626',
 };
 
 interface AgeGroupChartProps {
   cityId: number | null;
 }
 
+const AGE_ORDER = ['0-5','6-10','11-15','16-20','21-25','26-30','31-35','36-40','41-45','46-50','51-55','56-60','60+'];
+
 export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
-  const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!cityId) return;
-
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-
-        if (result.ageGroupData && result.ageGroupData.length > 0) {
-          const grouped = result.ageGroupData.reduce((acc: any, item: any) => {
-            const existing = acc.find((x: any) => x.ageGroup === item.ageGroup);
-            if (existing) {
-              existing[item.generation] = item.count;
-            } else {
-              acc.push({
-                ageGroup: item.ageGroup,
-                [item.generation]: item.count,
-              });
-            }
-            return acc;
-          }, []);
-
-          setData(grouped);
-        }
-      } catch (error) {
-        console.error('Failed to fetch age group data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      const response = await fetch(`/api/demographics?cityId=${cityId}`);
+      const result = await response.json();
+      const grouped = (result.ageGroupData ?? []).reduce((acc: any[], item: any) => {
+        const found = acc.find((entry) => entry.ageGroup === item.ageGroup);
+        if (found) found[item.generation] = item.value;
+        else acc.push({ ageGroup: item.ageGroup, [item.generation]: item.value });
+        return acc;
+      }, []);
+      grouped.sort((a: { ageGroup: string }, b: { ageGroup: string }) => AGE_ORDER.indexOf(a.ageGroup) - AGE_ORDER.indexOf(b.ageGroup));
+      setData(grouped);
     };
-
     fetchData();
   }, [cityId]);
 
-  if (isLoading) {
-    return (
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Population by Age Group & Generation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96 bg-muted rounded-lg animate-pulse" />
-        </CardContent>
-      </Card>
-    );
-  }
+  const total = useMemo(() => data.reduce((sum, row) => sum + Object.entries(row).filter(([k]) => k !== 'ageGroup').reduce((s,[,v])=>s+Number(v||0),0), 0), [data]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Population by Age Group & Generation</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-base">Kelompok Usia per 5 Tahun & Generasi</CardTitle></CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+          <ResponsiveContainer width="100%" height={380}>
+            <BarChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="ageGroup" stroke="var(--muted-foreground)" />
+              <XAxis dataKey="ageGroup" stroke="var(--muted-foreground)" interval={0} angle={-25} textAnchor="end" height={60} />
               <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '6px',
-                }}
-                labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => value.toLocaleString()}
-              />
+              <Tooltip formatter={(value: any) => Number(value).toLocaleString('id-ID')} />
               <Legend />
-              {Object.keys(GENERATION_COLORS).map((generation) => (
-                <Bar
-                  key={generation}
-                  dataKey={generation}
-                  stackId="a"
-                  fill={GENERATION_COLORS[generation]}
-                  radius={[8, 8, 0, 0]}
-                />
+              {Object.entries(GENERATION_COLORS).map(([g, c]) => (
+                <Bar key={g} dataKey={g} stackId="gen" fill={c} radius={[6,6,0,0]} />
               ))}
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Grouped by age range and sub-grouped by generation
-          </p>
+          <p className="text-xs text-muted-foreground">Nilai menampilkan jumlah populasi (jumlah_anggota) tiap bucket usia dan generasi. Total: {total.toLocaleString('id-ID')}.</p>
         </CardContent>
       </Card>
     </motion.div>

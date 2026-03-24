@@ -1,105 +1,51 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
-interface IncomeChartProps {
-  cityId: number | null;
-}
+const COLORS = ['#2563eb', '#0ea5e9', '#14b8a6', '#f59e0b', '#dc2626'];
+
+interface IncomeChartProps { cityId: number | null; }
 
 export function IncomeChart({ cityId }: IncomeChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const total = useMemo(() => data.reduce((s, d) => s + Number(d.value || 0), 0), [data]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       if (!cityId) return;
-
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-
-        if (result.incomeData && result.incomeData.length > 0) {
-          const formatted = result.incomeData.map((item: any) => ({
-            name: item.incomeRange,
-            value: item.count,
-          }));
-          setData(formatted);
-        }
-      } catch (error) {
-        console.error('Failed to fetch income data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      const response = await fetch(`/api/demographics?cityId=${cityId}`);
+      const result = await response.json();
+      setData(result.incomeData ?? []);
     };
-
-    fetchData();
+    load();
   }, [cityId]);
 
-  const handleBarClick = (entry: any) => {
-    const newIncomes = filters.selectedIncomeRanges.includes(entry.name)
-      ? filters.selectedIncomeRanges.filter((i) => i !== entry.name)
-      : [...filters.selectedIncomeRanges, entry.name];
-
-    updateFilter('selectedIncomeRanges', newIncomes);
-  };
-
-  if (isLoading) {
-    return (
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Monthly Income</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80 bg-muted rounded-lg animate-pulse" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Monthly Income</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-45} textAnchor="end" height={80} />
-              <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '6px',
-                }}
-                labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => value.toLocaleString()}
-              />
-              <Bar
-                dataKey="value"
-                fill="var(--chart-4)"
-                onClick={(data) => handleBarClick(data)}
-                cursor="pointer"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Click on a bar to filter by income range
-          </p>
-        </CardContent>
-      </Card>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="border-border/50"><CardHeader><CardTitle className="text-base">Range Pendapatan Bulanan</CardTitle></CardHeader><CardContent>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="name" stroke="var(--muted-foreground)" interval={0} />
+            <YAxis stroke="var(--muted-foreground)" />
+            <Tooltip formatter={(v: any) => Number(v).toLocaleString('id-ID')} />
+            <Bar dataKey="value" onClick={(barData: any) => {
+              const next = filters.selectedIncomeRanges.includes(barData.name)
+                ? filters.selectedIncomeRanges.filter((x) => x !== barData.name)
+                : [...filters.selectedIncomeRanges, barData.name];
+              updateFilter('selectedIncomeRanges', next);
+            }}>
+              {data.map((entry, idx) => <Cell key={entry.name} fill={COLORS[idx % COLORS.length]} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+        <p className="text-xs text-muted-foreground">Total: {total.toLocaleString('id-ID')} responden.</p>
+      </CardContent></Card>
     </motion.div>
   );
 }

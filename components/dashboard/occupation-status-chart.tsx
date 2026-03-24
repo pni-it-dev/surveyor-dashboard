@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useFilters } from '@/lib/filter-context';
 
-const COLORS = ['#0ea5e9', '#06b6d4', '#10b981', '#f59e0b', '#ef4444'];
+const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#2563eb', '#8b5cf6'];
 
 interface OccupationStatusChartProps {
   cityId: number | null;
@@ -15,92 +15,40 @@ interface OccupationStatusChartProps {
 export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
   const { filters, updateFilter } = useFilters();
   const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const total = useMemo(() => data.reduce((sum, d) => sum + Number(d.value || 0), 0), [data]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!cityId) return;
-
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-
-        if (result.occupationStatusBreakdown && result.occupationStatusBreakdown.length > 0) {
-          const status = result.occupationStatusBreakdown[0];
-          setData([
-            { name: 'Employed', value: status.employed },
-            { name: 'Unemployed', value: status.unemployed },
-            { name: 'Student', value: status.student },
-            { name: 'Retired', value: status.retired },
-            { name: 'Other', value: status.other },
-          ]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch occupation status data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      const response = await fetch(`/api/demographics?cityId=${cityId}`);
+      const result = await response.json();
+      setData(result.occupationStatusBreakdown ?? []);
     };
-
     fetchData();
   }, [cityId]);
 
-  const handlePieClick = (entry: any) => {
-    const newStatuses = filters.selectedOccupationStatus.includes(entry.name)
+  const onSelect = (entry: any) => {
+    const next = filters.selectedOccupationStatus.includes(entry.name)
       ? filters.selectedOccupationStatus.filter((s) => s !== entry.name)
       : [...filters.selectedOccupationStatus, entry.name];
-
-    updateFilter('selectedOccupationStatus', newStatuses);
+    updateFilter('selectedOccupationStatus', next);
   };
 
-  if (isLoading) {
-    return (
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Population by Occupation Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80 bg-muted rounded-lg animate-pulse" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Population by Occupation Status</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-base">Status Pekerjaan (Doughnut)</CardTitle></CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name }) => name}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                onClick={(entry) => handlePieClick(entry)}
-                cursor="pointer"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
+              <Pie data={data} dataKey="value" nameKey="name" innerRadius={60} outerRadius={100} onClick={onSelect} cursor="pointer" label={({ percent }) => `${((percent || 0) * 100).toFixed(0)}%`}>
+                {data.map((entry, idx) => <Cell key={entry.name} fill={COLORS[idx % COLORS.length]} />)}
               </Pie>
-              <Tooltip formatter={(value) => value.toLocaleString()} />
+              <Tooltip formatter={(v: any) => Number(v).toLocaleString('id-ID')} />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Click on a section to filter by occupation status
-          </p>
+          <p className="text-xs text-muted-foreground">Total kategori: {total.toLocaleString('id-ID')} responden.</p>
         </CardContent>
       </Card>
     </motion.div>

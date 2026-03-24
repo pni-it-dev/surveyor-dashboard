@@ -144,7 +144,7 @@ export default function DashboardPage() {
           )}
 
           {/* Demographics Summary & Gender Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -156,7 +156,7 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              className="lg:col-span-2"
+              
             >
               <GenderChart cityId={selectedCity} />
             </motion.div>

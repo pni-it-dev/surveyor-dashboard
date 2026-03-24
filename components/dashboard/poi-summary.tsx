@@ -3,95 +3,58 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingCart, MapPin, Coffee, Hotel, Briefcase, Landmark } from 'lucide-react';
+import { Building2, BusFront, Coffee, Fuel, Hotel, Landmark, School, ShoppingBag, Trees } from 'lucide-react';
 
 const POI_ICONS: { [key: string]: React.ReactNode } = {
-  'Retail Store': <ShoppingCart className="h-5 w-5" />,
-  'Restaurant': <Coffee className="h-5 w-5" />,
-  'Hotel': <Hotel className="h-5 w-5" />,
-  'Hospital': <Landmark className="h-5 w-5" />,
-  'Gas Station': <MapPin className="h-5 w-5" />,
-  'Bank': <Briefcase className="h-5 w-5" />,
-  'School': <Landmark className="h-5 w-5" />,
-  'Park': <MapPin className="h-5 w-5" />,
-  'Shopping Mall': <ShoppingCart className="h-5 w-5" />,
-  'Movie Theater': <Coffee className="h-5 w-5" />,
+  'Toko dan Retail': <ShoppingBag className="h-5 w-5" />,
+  FnB: <Coffee className="h-5 w-5" />,
+  Pendidikan: <School className="h-5 w-5" />,
+  'Perkantoran dan Komersil': <Building2 className="h-5 w-5" />,
+  'Fasilitas Publik': <Landmark className="h-5 w-5" />,
+  Manufaktur: <Building2 className="h-5 w-5" />,
+  'Otomotif dan Jasa': <Building2 className="h-5 w-5" />,
+  'Taman dan Rekreasi': <Trees className="h-5 w-5" />,
+  'Hiburan Umum': <Coffee className="h-5 w-5" />,
+  'Hiburan Dewasa': <Coffee className="h-5 w-5" />,
+  'Pom Bensin': <Fuel className="h-5 w-5" />,
+  'Rumah Sakit': <Landmark className="h-5 w-5" />,
+  'Hotel dan Penginapan': <Hotel className="h-5 w-5" />,
+  'Transportasi dan Pemberhentian': <BusFront className="h-5 w-5" />,
+  'Fasilitas Olahraga dan Gelanggang': <Building2 className="h-5 w-5" />,
 };
 
-interface POISummaryProps {
-  cityId: number | null;
-}
+const CARD_COLORS = ['from-red-50 to-red-100', 'from-blue-50 to-blue-100', 'from-emerald-50 to-emerald-100', 'from-amber-50 to-amber-100', 'from-fuchsia-50 to-fuchsia-100'];
+
+interface POISummaryProps { cityId: number | null; }
 
 export function POISummary({ cityId }: POISummaryProps) {
   const [pois, setPois] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!cityId) return;
-
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-
-        if (result.pointsOfInterest && result.pointsOfInterest.length > 0) {
-          setPois(result.pointsOfInterest);
-        }
-      } catch (error) {
-        console.error('Failed to fetch POI data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      const response = await fetch(`/api/demographics?cityId=${cityId}`);
+      const result = await response.json();
+      setPois(result.pointsOfInterest ?? []);
     };
-
     fetchData();
   }, [cityId]);
 
-  if (isLoading) {
-    return (
-      <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Points of Interest (POI)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-48 bg-muted rounded-lg animate-pulse" />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <Card className="border-border/50">
-        <CardHeader>
-          <CardTitle className="text-base">Points of Interest (POI) Summary</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-base">Ringkasan POI Turunan</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {pois.map((poi, index) => (
-              <motion.div
-                key={poi.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex flex-col items-center p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
-              >
-                <div className="p-2 rounded-lg bg-primary/10 mb-2 text-primary">
-                  {POI_ICONS[poi.poiType] || <MapPin className="h-5 w-5" />}
-                </div>
-                <p className="text-xs font-medium text-center text-foreground mb-1">
-                  {poi.poiType}
-                </p>
-                <p className="text-lg font-bold text-primary">
-                  {poi.count}
-                </p>
-              </motion.div>
+              <div key={poi.id} className={`rounded-2xl border border-border/60 bg-gradient-to-br p-4 ${CARD_COLORS[index % CARD_COLORS.length]}`}>
+                <div className="mb-2 inline-flex rounded-xl bg-white/85 p-2 text-primary">{POI_ICONS[poi.poiType] ?? <Landmark className="h-5 w-5" />}</div>
+                <p className="line-clamp-2 min-h-10 text-xs font-medium text-foreground">{poi.poiType}</p>
+                <p className="mt-1 text-lg font-bold text-primary">{Number(poi.count).toLocaleString('id-ID')}</p>
+              </div>
             ))}
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">Angka POI adalah indikator turunan untuk membaca potensi layanan per area.</p>
         </CardContent>
       </Card>
     </motion.div>

@@ -1,5 +1,32 @@
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
+DROP TABLE IF EXISTS surveyor_population_fact CASCADE;
+DROP TABLE IF EXISTS poi_type_master CASCADE;
+DROP TABLE IF EXISTS food_preferences_master CASCADE;
+DROP TABLE IF EXISTS housing_status_master CASCADE;
+DROP TABLE IF EXISTS monthly_income_master CASCADE;
+DROP TABLE IF EXISTS education_master CASCADE;
+DROP TABLE IF EXISTS socioeconomy_master CASCADE;
+DROP TABLE IF EXISTS occupation_type_master CASCADE;
+DROP TABLE IF EXISTS occupation_status_master CASCADE;
+DROP TABLE IF EXISTS marital_status_master CASCADE;
+DROP TABLE IF EXISTS gender_master CASCADE;
+DROP TABLE IF EXISTS surveyor_kabkot_geojson CASCADE;
+DROP TABLE IF EXISTS points_of_interest CASCADE;
+DROP TABLE IF EXISTS food_expenditure_data CASCADE;
+DROP TABLE IF EXISTS income_data CASCADE;
+DROP TABLE IF EXISTS socioeconomic_data CASCADE;
+DROP TABLE IF EXISTS age_group_data CASCADE;
+DROP TABLE IF EXISTS job_occupations CASCADE;
+DROP TABLE IF EXISTS occupation_status_breakdown CASCADE;
+DROP TABLE IF EXISTS marital_status_breakdown CASCADE;
+DROP TABLE IF EXISTS gender_breakdown CASCADE;
+DROP TABLE IF EXISTS demographics CASCADE;
+DROP TABLE IF EXISTS cities CASCADE;
+
+ALTER TABLE IF EXISTS password_reset_tokens RENAME TO surveyor_password_reset_tokens;
+ALTER TABLE IF EXISTS sessions RENAME TO surveyor_sessions;
+ALTER TABLE IF EXISTS users RENAME TO surveyor_users;
+
+CREATE TABLE IF NOT EXISTS surveyor_users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
@@ -8,142 +35,119 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS users_email_idx ON users(email);
+CREATE INDEX IF NOT EXISTS surveyor_users_email_idx ON surveyor_users(email);
 
--- Create password reset tokens table
-CREATE TABLE IF NOT EXISTS password_reset_tokens (
+CREATE TABLE IF NOT EXISTS surveyor_password_reset_tokens (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES surveyor_users(id) ON DELETE CASCADE,
   token VARCHAR(255) NOT NULL UNIQUE,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create sessions table
-CREATE TABLE IF NOT EXISTS sessions (
+CREATE TABLE IF NOT EXISTS surveyor_sessions (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES surveyor_users(id) ON DELETE CASCADE,
   session_token VARCHAR(255) NOT NULL UNIQUE,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS sessions_token_idx ON sessions(session_token);
+CREATE INDEX IF NOT EXISTS surveyor_sessions_token_idx ON surveyor_sessions(session_token);
 
--- Create cities table
-CREATE TABLE IF NOT EXISTS cities (
+
+CREATE TABLE IF NOT EXISTS surveyor_kabkot_geojson (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  geojson JSONB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS gender_master (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  address VARCHAR(255) NOT NULL,
-  latitude DECIMAL(10, 8) NOT NULL,
-  longitude DECIMAL(11, 8) NOT NULL,
-  geojson_data JSONB NOT NULL,
+  gender VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS cities_name_idx ON cities(name);
-
--- Create demographics table
-CREATE TABLE IF NOT EXISTS demographics (
+CREATE TABLE IF NOT EXISTS marital_status_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  total_population INTEGER NOT NULL,
-  total_households INTEGER NOT NULL,
-  avg_household_size DECIMAL(5, 2) NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS demographics_city_idx ON demographics(city_id);
-
--- Create gender breakdown table
-CREATE TABLE IF NOT EXISTS gender_breakdown (
-  id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  male INTEGER NOT NULL,
-  female INTEGER NOT NULL,
+  status VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create marital status breakdown table
-CREATE TABLE IF NOT EXISTS marital_status_breakdown (
+CREATE TABLE IF NOT EXISTS occupation_status_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  married INTEGER NOT NULL,
-  single INTEGER NOT NULL,
-  widow INTEGER NOT NULL,
-  divorced INTEGER NOT NULL,
+  status VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create occupation status breakdown table
-CREATE TABLE IF NOT EXISTS occupation_status_breakdown (
+CREATE TABLE IF NOT EXISTS occupation_type_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  employed INTEGER NOT NULL,
-  unemployed INTEGER NOT NULL,
-  student INTEGER NOT NULL,
-  retired INTEGER NOT NULL,
-  other INTEGER NOT NULL,
+  type VARCHAR(150) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create job occupations table
-CREATE TABLE IF NOT EXISTS job_occupations (
+CREATE TABLE IF NOT EXISTS socioeconomy_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  occupation VARCHAR(255) NOT NULL,
-  count INTEGER NOT NULL,
-  percentage DECIMAL(5, 2) NOT NULL,
+  class VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create age group data table
-CREATE TABLE IF NOT EXISTS age_group_data (
+CREATE TABLE IF NOT EXISTS education_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  age_group VARCHAR(50) NOT NULL,
-  generation VARCHAR(50) NOT NULL,
-  count INTEGER NOT NULL,
-  percentage DECIMAL(5, 2) NOT NULL,
+  grade VARCHAR(50) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create socioeconomic data table
-CREATE TABLE IF NOT EXISTS socioeconomic_data (
+CREATE TABLE IF NOT EXISTS monthly_income_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  category VARCHAR(255) NOT NULL,
-  value INTEGER NOT NULL,
-  percentage DECIMAL(5, 2) NOT NULL,
+  income VARCHAR(50) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create income data table
-CREATE TABLE IF NOT EXISTS income_data (
+CREATE TABLE IF NOT EXISTS housing_status_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  income_range VARCHAR(255) NOT NULL,
-  count INTEGER NOT NULL,
-  percentage DECIMAL(5, 2) NOT NULL,
+  status VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create food expenditure data table
-CREATE TABLE IF NOT EXISTS food_expenditure_data (
+CREATE TABLE IF NOT EXISTS food_preferences_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  category VARCHAR(255) NOT NULL,
-  amount DECIMAL(10, 2) NOT NULL,
-  percentage DECIMAL(5, 2) NOT NULL,
+  preference VARCHAR(100) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
 
--- Create points of interest table
-CREATE TABLE IF NOT EXISTS points_of_interest (
+CREATE TABLE IF NOT EXISTS poi_type_master (
   id SERIAL PRIMARY KEY,
-  city_id INTEGER NOT NULL REFERENCES cities(id) ON DELETE CASCADE,
-  poi_type VARCHAR(100) NOT NULL,
-  count INTEGER NOT NULL,
+  poi VARCHAR(150) NOT NULL UNIQUE,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS surveyor_population_fact (
+  id SERIAL PRIMARY KEY,
+  no_kk VARCHAR(50) NOT NULL UNIQUE,
+  jumlah_anggota INTEGER NOT NULL,
+  gender_id INTEGER NOT NULL REFERENCES gender_master(id),
+  usia INTEGER NOT NULL,
+  housing_status_id INTEGER NOT NULL REFERENCES housing_status_master(id),
+  kecamatan VARCHAR(150) NOT NULL,
+  kabkot_id INTEGER NOT NULL,
+  marital_status_id INTEGER NOT NULL REFERENCES marital_status_master(id),
+  education_id INTEGER NOT NULL REFERENCES education_master(id),
+  occupation_status_id INTEGER NOT NULL REFERENCES occupation_status_master(id),
+  occupation_type_id INTEGER NOT NULL REFERENCES occupation_type_master(id),
+  monthly_income_id INTEGER NOT NULL REFERENCES monthly_income_master(id),
+  food_preference_id INTEGER NOT NULL REFERENCES food_preferences_master(id),
+  monthly_food_expenditure DECIMAL(14, 2) NOT NULL,
+  socioclass_id INTEGER NOT NULL REFERENCES socioeconomy_master(id),
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+  -- kabkot_id is intended to reference another schema and is therefore stored as-is here.
+);
+
+CREATE INDEX IF NOT EXISTS surveyor_population_fact_kecamatan_idx
+  ON surveyor_population_fact(kecamatan);
+CREATE INDEX IF NOT EXISTS surveyor_population_fact_kabkot_idx
+  ON surveyor_population_fact(kabkot_id);
+CREATE INDEX IF NOT EXISTS surveyor_population_fact_gender_idx
+  ON surveyor_population_fact(gender_id);
+CREATE INDEX IF NOT EXISTS surveyor_population_fact_marital_idx
+  ON surveyor_population_fact(marital_status_id);

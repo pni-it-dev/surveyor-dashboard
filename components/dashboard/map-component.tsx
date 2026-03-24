@@ -1,101 +1,112 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { MapPin } from 'lucide-react';
+import { Compass, MapPin } from 'lucide-react';
+
+type GeoFeature = {
+  type: 'Feature';
+  geometry?: {
+    type?: 'Polygon' | 'MultiPolygon';
+    coordinates?: any;
+  };
+  properties?: Record<string, unknown>;
+};
 
 interface MapComponentProps {
   city: {
     latitude: number;
     longitude: number;
-    geojsonData: any;
     name: string;
+    address: string;
+    respondentCount: number;
+    totalPopulation: number;
+    kabkotName?: string;
+    geojsonData?: GeoFeature;
   };
 }
 
+function flattenCoordinates(feature?: GeoFeature) {
+  if (!feature?.geometry?.coordinates) return [] as [number, number][];
+  const { type, coordinates } = feature.geometry;
+  if (type === 'Polygon') {
+    return (coordinates[0] ?? []) as [number, number][];
+  }
+  if (type === 'MultiPolygon') {
+    return (coordinates[0]?.[0] ?? []) as [number, number][];
+  }
+  return [] as [number, number][];
+}
+
+function buildPath(points: [number, number][]) {
+  if (points.length < 3) return '';
+  const lngs = points.map((point) => point[0]);
+  const lats = points.map((point) => point[1]);
+  const minX = Math.min(...lngs);
+  const maxX = Math.max(...lngs);
+  const minY = Math.min(...lats);
+  const maxY = Math.max(...lats);
+
+  const width = maxX - minX || 1;
+  const height = maxY - minY || 1;
+  const pad = 10;
+
+  return points
+    .map((point, index) => {
+      const x = ((point[0] - minX) / width) * (100 - pad * 2) + pad;
+      const y = (1 - (point[1] - minY) / height) * (100 - pad * 2) + pad;
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(' ') + ' Z';
+}
+
 export default function MapComponent({ city }: MapComponentProps) {
-  // Calculate map position based on coordinates
-  const mapX = ((city.longitude + 180) / 360) * 100;
-  const mapY = ((90 - city.latitude) / 180) * 100;
+  const points = flattenCoordinates(city.geojsonData);
+  const polygonPath = buildPath(points);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden relative"
+      transition={{ duration: 0.35 }}
+      className="relative h-[420px] w-full overflow-hidden rounded-lg border border-border/70 bg-card"
     >
-      {/* Map grid background */}
-      <div className="absolute inset-0 opacity-10 dark:opacity-5">
-        <svg width="100%" height="100%" className="w-full h-full">
+      <div className="absolute inset-0 bg-[linear-gradient(145deg,rgba(220,40,40,0.09),rgba(220,40,40,0.02))]" />
+
+      <div className="absolute inset-0 p-5">
+        <svg viewBox="0 0 100 100" className="h-full w-full rounded-xl border border-border/70 bg-background/90">
           <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            <pattern id="grid-red" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="rgba(220,40,40,0.12)" strokeWidth="0.4" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+          <rect width="100" height="100" fill="url(#grid-red)" />
+          {polygonPath ? (
+            <>
+              <path d={polygonPath} fill="rgba(220,40,40,0.20)" stroke="#dc2828" strokeWidth="1.2" />
+              <circle cx="50" cy="50" r="1.8" fill="#dc2828" />
+            </>
+          ) : (
+            <text x="50" y="50" dominantBaseline="middle" textAnchor="middle" fill="currentColor" className="text-[4px]">
+              GeoJSON belum tersedia
+            </text>
+          )}
         </svg>
       </div>
 
-      {/* Latitude/Longitude lines */}
-      <div className="absolute inset-0 opacity-5 dark:opacity-10">
-        {/* Longitude lines */}
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div
-            key={`lon-${i}`}
-            className="absolute top-0 bottom-0 w-px bg-slate-400 dark:bg-slate-600"
-            style={{ left: `${(i + 1) * 11.11}%` }}
-          />
-        ))}
-        {/* Latitude lines */}
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div
-            key={`lat-${i}`}
-            className="absolute left-0 right-0 h-px bg-slate-400 dark:bg-slate-600"
-            style={{ top: `${(i + 1) * 11.11}%` }}
-          />
-        ))}
+      <div className="absolute right-6 top-6 rounded-full border border-border/70 bg-background/95 p-2 text-primary shadow-sm">
+        <Compass className="h-5 w-5" />
       </div>
 
-      {/* City marker */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.2, type: 'spring' }}
-        className="absolute transform -translate-x-1/2 -translate-y-1/2 z-10"
-        style={{ left: `${mapX}%`, top: `${mapY}%` }}
-      >
-        <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="relative"
-        >
-          <div className="w-8 h-8 bg-primary rounded-full shadow-lg flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div className="absolute inset-0 w-8 h-8 rounded-full border-2 border-primary opacity-60 animate-pulse" />
-        </motion.div>
-      </motion.div>
-
-      {/* Location info */}
-      <div className="absolute bottom-4 left-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-lg p-3 z-10 border border-slate-200 dark:border-slate-700">
-        <h3 className="font-semibold text-foreground mb-1">{city.name}</h3>
-        <p className="text-sm text-muted-foreground">
-          Lat: {city.latitude.toFixed(4)}° Lon: {city.longitude.toFixed(4)}°
-        </p>
-      </div>
-
-      {/* Compass rose */}
-      <div className="absolute top-4 right-4 w-12 h-12 z-10">
-        <motion.svg
-          viewBox="0 0 100 100"
-          className="w-full h-full text-primary"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-        >
-          <circle cx="50" cy="50" r="45" fill="white" stroke="currentColor" strokeWidth="2" opacity="0.8" className="dark:fill-slate-800" />
-          <path d="M 50 10 L 55 35 L 50 30 L 45 35 Z" fill="currentColor" />
-          <text x="50" y="25" textAnchor="middle" className="text-xs font-bold fill-current">N</text>
-        </motion.svg>
+      <div className="absolute bottom-6 left-6 right-6 z-10 rounded-2xl border border-border/70 bg-background/95 p-4 shadow-sm">
+        <div className="mb-3 flex items-center gap-2 text-primary">
+          <MapPin className="h-4 w-4" />
+          <span className="text-sm font-semibold">{city.kabkotName ?? city.name}</span>
+        </div>
+        <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-3">
+          <p className="text-muted-foreground">Koordinat: <span className="font-semibold text-foreground">{city.latitude.toFixed(4)}, {city.longitude.toFixed(4)}</span></p>
+          <p className="text-muted-foreground">Responden: <span className="font-semibold text-foreground">{Number(city.respondentCount).toLocaleString('id-ID')}</span></p>
+          <p className="text-muted-foreground">Populasi: <span className="font-semibold text-foreground">{Number(city.totalPopulation).toLocaleString('id-ID')}</span></p>
+        </div>
       </div>
     </motion.div>
   );
