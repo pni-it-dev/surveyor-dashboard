@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS surveyor_population_fact CASCADE;
+DROP TABLE IF EXISTS surveyor_poi_fact CASCADE;
 DROP TABLE IF EXISTS poi_type_master CASCADE;
 DROP TABLE IF EXISTS food_preferences_master CASCADE;
 DROP TABLE IF EXISTS housing_status_master CASCADE;
@@ -117,12 +118,10 @@ CREATE TABLE IF NOT EXISTS poi_type_master (
 CREATE TABLE IF NOT EXISTS surveyor_population_fact (
   id SERIAL PRIMARY KEY,
   no_kk VARCHAR(50) NOT NULL UNIQUE,
-  jumlah_anggota INTEGER NOT NULL,
+  nama_anggota VARCHAR(255) NOT NULL,
   gender_id INTEGER NOT NULL REFERENCES gender_master(id),
   usia INTEGER NOT NULL,
   housing_status_id INTEGER NOT NULL REFERENCES housing_status_master(id),
-  kecamatan VARCHAR(150) NOT NULL,
-  kabkot_id INTEGER NOT NULL,
   marital_status_id INTEGER NOT NULL REFERENCES marital_status_master(id),
   education_id INTEGER NOT NULL REFERENCES education_master(id),
   occupation_status_id INTEGER NOT NULL REFERENCES occupation_status_master(id),
@@ -134,12 +133,26 @@ CREATE TABLE IF NOT EXISTS surveyor_population_fact (
   created_at TIMESTAMP DEFAULT NOW() NOT NULL
   -- kabkot_id is intended to reference another schema and is therefore stored as-is here.
 );
-
-CREATE INDEX IF NOT EXISTS surveyor_population_fact_kecamatan_idx
-  ON surveyor_population_fact(kecamatan);
-CREATE INDEX IF NOT EXISTS surveyor_population_fact_kabkot_idx
-  ON surveyor_population_fact(kabkot_id);
 CREATE INDEX IF NOT EXISTS surveyor_population_fact_gender_idx
   ON surveyor_population_fact(gender_id);
 CREATE INDEX IF NOT EXISTS surveyor_population_fact_marital_idx
   ON surveyor_population_fact(marital_status_id);
+
+CREATE TABLE IF NOT EXISTS surveyor_poi_fact (
+  id SERIAL PRIMARY KEY,
+  kecamatan_id VARCHAR(6) NOT NULL,
+  poi_name VARCHAR(255) NOT NULL,
+  poi_address VARCHAR(500) NOT NULL,
+  poi_type_id INTEGER REFERENCES poi_type_master(id),
+  operational_day VARCHAR(100),
+  avg_open_hour VARCHAR(5),
+  avg_closed_hour VARCHAR(5),
+  longitude REAL,
+  latitude REAL,
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS surveyor_poi_fact_kecamatan_idx
+  ON surveyor_poi_fact(kecamatan_id);
+CREATE INDEX IF NOT EXISTS surveyor_poi_fact_poi_type_idx
+  ON surveyor_poi_fact(poi_type_id);

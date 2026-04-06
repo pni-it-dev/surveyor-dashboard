@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { X } from 'lucide-react';
+} from "@/components/ui/select";
+import { X } from "lucide-react";
 
 interface FilterControlsProps {
   cities: any[];
-  selectedCityId: number | null;
-  onCityChange: (cityId: number) => void;
+  selectedCityId: string | undefined;
+  onCityChange: (cityId: string) => void;
   isFilterActive: boolean;
   onClearFilters: () => void;
 }
@@ -27,12 +27,16 @@ export function FilterControls({
   onClearFilters,
 }: FilterControlsProps) {
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <Card className="border-border/50 shadow-sm">
         <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <CardTitle className="text-lg">Filter Controls</CardTitle>
-            {isFilterActive && (
+            {/* {isFilterActive && (
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -42,14 +46,19 @@ export function FilterControls({
                 <X className="h-4 w-4" />
                 Clear All
               </motion.button>
-            )}
+            )} */}
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-foreground">Pilih Kecamatan</label>
-            <Select value={selectedCityId?.toString() || ''} onValueChange={(value) => onCityChange(parseInt(value, 10))}>
+            <label className="mb-2 block text-sm font-medium text-foreground">
+              Pilih Kecamatan
+            </label>
+            <Select
+              value={selectedCityId?.toString() || ""}
+              onValueChange={(value) => onCityChange(value)}
+            >
               <SelectTrigger className="w-full border-border/50 bg-background/90">
                 <SelectValue placeholder="Pilih area..." />
               </SelectTrigger>
@@ -61,12 +70,6 @@ export function FilterControls({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="rounded-2xl border border-border/50 bg-gradient-to-r from-muted/40 to-secondary/60 p-4">
-            <p className="text-xs text-muted-foreground">
-              💡 <strong>Tip:</strong> Semua chart sekarang diturunkan dari satu tabel fact + tabel master. Klik elemen chart untuk aktifkan filter global.
-            </p>
           </div>
         </CardContent>
       </Card>

@@ -11,6 +11,7 @@ import {
   poiTypeMaster,
   socioeconomyMaster,
   surveyorPopulationFact,
+  surveyorPoiFact,
 } from "../lib/schema";
 import { sql } from "drizzle-orm";
 
@@ -104,102 +105,137 @@ const masterSeedData = {
   ],
 };
 
-const AREA_BLUEPRINTS = [
-  {
-    kecamatan: "Kebayoran Baru",
-    kabkotId: 3171,
-    baseNoKk: "317101",
-    records: [
-      [4, 2, 35, 1, 2, 5, 1, 6, 4, 2, 1200000],
-      [3, 1, 22, 2, 1, 3, 3, 7, 2, 4, 900000],
-      [5, 2, 41, 1, 2, 5, 1, 1, 5, 3, 1450000],
-      [2, 1, 67, 1, 4, 1, 4, 15, 2, 3, 650000],
-      [4, 2, 29, 2, 2, 4, 1, 2, 1, 2, 1000000],
-      [3, 1, 18, 3, 1, 3, 3, 7, 1, 2, 700000],
-      [6, 2, 52, 1, 2, 6, 1, 10, 3, 3, 1600000],
-      [4, 1, 38, 2, 2, 5, 1, 4, 4, 4, 1150000],
-      [3, 2, 31, 5, 2, 4, 2, 11, 2, 2, 850000],
-      [5, 1, 44, 1, 2, 5, 1, 14, 3, 3, 1400000],
-      [2, 2, 24, 2, 1, 5, 2, 6, 1, 1, 780000],
-      [4, 1, 15, 3, 1, 3, 3, 7, 4, 2, 720000],
-    ],
-  },
-  {
-    kecamatan: "Gubeng",
-    kabkotId: 3578,
-    baseNoKk: "357801",
-    records: [
-      [4, 1, 33, 1, 2, 5, 1, 6, 3, 3, 980000],
-      [3, 2, 27, 2, 1, 4, 1, 2, 2, 2, 760000],
-      [5, 1, 46, 1, 2, 3, 1, 9, 3, 3, 1200000],
-      [2, 2, 61, 3, 3, 1, 4, 15, 4, 3, 610000],
-      [4, 1, 20, 3, 1, 3, 3, 7, 1, 2, 680000],
-      [3, 2, 35, 2, 2, 4, 1, 1, 2, 4, 930000],
-      [5, 1, 54, 1, 2, 5, 1, 10, 4, 3, 1260000],
-      [4, 2, 40, 1, 2, 5, 1, 11, 3, 3, 1090000],
-      [3, 1, 24, 5, 1, 4, 2, 6, 1, 1, 740000],
-      [6, 2, 48, 1, 2, 5, 1, 14, 4, 3, 1380000],
-      [2, 1, 17, 3, 1, 3, 3, 7, 1, 2, 650000],
-      [4, 2, 30, 2, 2, 5, 2, 4, 2, 2, 870000],
-    ],
-  },
-  {
-    kecamatan: "Coblong",
-    kabkotId: 3273,
-    baseNoKk: "327301",
-    records: [
-      [4, 2, 37, 1, 2, 5, 1, 1, 3, 3, 1020000],
-      [3, 1, 23, 2, 1, 4, 2, 7, 2, 2, 790000],
-      [5, 2, 45, 1, 2, 5, 1, 6, 4, 4, 1320000],
-      [2, 1, 64, 1, 3, 1, 4, 15, 4, 3, 600000],
-      [4, 2, 28, 2, 1, 5, 1, 2, 2, 2, 910000],
-      [3, 1, 19, 3, 1, 3, 3, 7, 1, 2, 700000],
-      [5, 2, 51, 1, 2, 5, 1, 10, 3, 3, 1410000],
-      [4, 1, 39, 2, 2, 4, 1, 11, 3, 3, 1110000],
-      [3, 2, 26, 5, 1, 4, 2, 6, 1, 1, 760000],
-      [6, 1, 43, 1, 2, 5, 1, 14, 4, 4, 1490000],
-      [2, 2, 21, 3, 1, 3, 3, 7, 1, 2, 670000],
-      [4, 1, 34, 2, 2, 5, 2, 4, 2, 3, 890000],
-    ],
-  },
-] as const;
+// ─── Population Fact ──────────────────────────────────────────────────────────
+
+const AREA_PREFIXES = ["351516", "357808", "357302"];
 
 function buildPopulationFacts() {
-  return AREA_BLUEPRINTS.flatMap((area) =>
-    area.records.map((record, index) => ({
-      noKk: `${area.baseNoKk}${String(index + 1).padStart(4, "0")}`,
-      jumlahAnggota: record[0],
-      genderId: record[1],
-      usia: record[2],
-      housingStatusId: record[3],
-      kecamatan: area.kecamatan,
-      kabkotId: area.kabkotId,
-      maritalStatusId: record[4],
-      educationId: record[5],
-      occupationStatusId: record[6],
-      occupationTypeId: record[7],
-      monthlyIncomeId: record[8],
-      foodPreferenceId: record[9],
-      monthlyFoodExpenditure: record[10],
-      socioclassId: deriveSocioClassId(record[8]),
-    })),
-  );
+  const result = [];
+  for (let i = 0; i < 1000; i++) {
+    const baseNoKk = AREA_PREFIXES[i % AREA_PREFIXES.length];
+    const monthlyIncomeId = Math.floor(Math.random() * 5) + 1;
+    result.push({
+      noKk: `${baseNoKk}${String(i + 1).padStart(10, "0")}`,
+      namaAnggota: `Dummy Name ${i + 1}`,
+      genderId: Math.floor(Math.random() * 2) + 1,
+      usia: Math.floor(Math.random() * 66) + 15,
+      housingStatusId: Math.floor(Math.random() * 5) + 1,
+      maritalStatusId: Math.floor(Math.random() * 4) + 1,
+      educationId: Math.floor(Math.random() * 7) + 1,
+      occupationStatusId: Math.floor(Math.random() * 5) + 1,
+      occupationTypeId: Math.floor(Math.random() * 15) + 1,
+      monthlyIncomeId: monthlyIncomeId,
+      foodPreferenceId: Math.floor(Math.random() * 4) + 1,
+      monthlyFoodExpenditure: Math.floor(Math.random() * 2500000) + 500000,
+      socioclassId: deriveSocioClassId(monthlyIncomeId),
+    });
+  }
+  return result;
 }
 
 function deriveSocioClassId(monthlyIncomeId: number) {
   switch (monthlyIncomeId) {
-    case 5:
-      return 1;
-    case 4:
-      return 2;
-    case 3:
-      return 3;
-    case 2:
-      return 4;
-    default:
-      return 5;
+    case 5: return 1;
+    case 4: return 2;
+    case 3: return 3;
+    case 2: return 4;
+    default: return 5;
   }
 }
+
+// ─── POI Fact ─────────────────────────────────────────────────────────────────
+
+const AREA_META: Record<string, { streets: string[]; lat: number; lng: number }> = {
+  "351516": {
+    streets: [
+      "Jl. Raya Gedangan", "Jl. Veteran", "Jl. Mawar", "Jl. Melati",
+      "Jl. Pahlawan", "Jl. Diponegoro", "Jl. Soekarno Hatta", "Jl. Raya Ketajen",
+    ],
+    lat: -7.3805,
+    lng: 112.7197,
+  },
+  "357808": {
+    streets: [
+      "Jl. Raya Gubeng", "Jl. Ngaglik", "Jl. Sulawesi", "Jl. Pemuda",
+      "Jl. Embong Malang", "Jl. Dharmahusada", "Jl. Kertajaya", "Jl. Prof. Dr. Moestopo",
+    ],
+    lat: -7.2819,
+    lng: 112.7578,
+  },
+  "357302": {
+    streets: [
+      "Jl. Basuki Rahmat", "Jl. Kawi", "Jl. Ijen", "Jl. Semeru",
+      "Jl. Merdeka", "Jl. Bromo", "Jl. Arjuno", "Jl. Besar Ijen",
+    ],
+    lat: -7.9825,
+    lng: 112.6308,
+  },
+};
+
+const POI_NAMES_BY_TYPE: Record<number, string[]> = {
+  1:  ["Alfamart", "Indomaret", "Toko Serbada", "Minimarket Sejahtera", "Toko Berkah", "Swalayan Maju", "Toko Pak Andi", "Kios Mandiri"],
+  2:  ["Warteg Bu Sari", "RM Padang Sederhana", "Cafe Kopi Nusantara", "RM Ayam Bakar", "Kedai Mie Ayam", "Depot Soto Lamongan", "Warung Nasi Uduk", "Kedai Bakso Pak Po"],
+  3:  ["SDN 01", "SMPN 02", "SMAN 03", "TK Tunas Bangsa", "Madrasah Ibtidaiyah", "SMKN 04", "Lembaga Bimbel Pintar", "PAUD Harapan Bangsa"],
+  4:  ["Kantor Bank BRI", "Gedung Graha Perkantoran", "Ruko Central Business", "Kantor Pos", "Gedung Komersil Mitra", "Ruko Golden Business"],
+  5:  ["Balai Desa", "Puskesmas Kecamatan", "Kantor Kelurahan", "Masjid Agung", "Gereja Bethel", "Pura Kerta Bumi", "Kantor Kecamatan"],
+  6:  ["PT Sumber Jaya Abadi", "Pabrik Tekstil Maju", "CV Karya Mandiri", "UD Hasil Bumi", "PT Cipta Industri Nusantara"],
+  7:  ["Bengkel Pak Budi", "Cuci Motor Express", "AHASS Resmi", "Bengkel Las Mulia", "Dealer Yamaha Resmi", "Toko Sparepart Otomotif"],
+  8:  ["Taman Kota", "Alun-alun Kecamatan", "Taman Bermain Anak", "Hutan Kota", "Lapangan Hijau Warga"],
+  9:  ["Bioskop Plaza", "Karaoke Inul Vista", "Game Center Fun", "Arena Bowling", "Wahana Hiburan Keluarga"],
+  10: ["Club Malam XO", "Lounge Bar Platinum", "Diskotik Paradise", "Sports Bar Elite"],
+  11: ["SPBU Pertamina 54-101", "SPBU Shell CBD", "SPBU Total Raya", "SPBU Vivo Maju"],
+  12: ["RSUD Daerah", "Klinik Pratama Sehat", "RS Ibu dan Anak", "Poliklinik Husada", "Apotek Kimia Farma", "Klinik dr. Santoso"],
+  13: ["Hotel Grand Mahkota", "Guest House Melati", "Hotel Bintang Lima", "Penginapan Nyaman", "Hotel Budget Inn", "Villa Sejahtera"],
+  14: ["Terminal Bus Kota", "Halte TransJawa", "Shelter Angkot", "Stasiun Kereta Lokal", "Pool Bus Malam"],
+  15: ["GOR Kecamatan", "Lapangan Futsal Maju", "Kolam Renang Tirta", "Gelanggang Olahraga", "Stadion Mini Warga"],
+};
+
+const OPERATIONAL_OPTIONS = ["Senin - Jumat", "Senin - Sabtu", "Setiap Hari", "Sabtu - Minggu"];
+const OPEN_HOUR_OPTIONS   = ["06:00", "07:00", "08:00", "09:00", "10:00"];
+const CLOSE_HOUR_OPTIONS  = ["16:00", "17:00", "18:00", "20:00", "21:00", "22:00", "23:00"];
+
+function rand<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function buildPoiFacts() {
+  const result = [];
+  const poiTypeIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+
+  for (let i = 0; i < 500; i++) {
+    const prefix  = AREA_PREFIXES[i % AREA_PREFIXES.length];
+    const meta    = AREA_META[prefix];
+    const street  = rand(meta.streets);
+    const houseNo = (i % 99) + 1;
+
+    // ~8% of records have no poi_type (unknown/unclassified)
+    const hasType   = Math.random() > 0.08;
+    const poiTypeId = hasType ? rand(poiTypeIds) : null;
+    const namePool  = poiTypeId ? POI_NAMES_BY_TYPE[poiTypeId] : ["Tempat Usaha Umum", "Fasilitas Lainnya"];
+    const suffix    = Math.ceil((i + 1) / namePool.length);
+    const poiName   = `${rand(namePool)}${suffix > 1 ? ` ${suffix}` : ""}`;
+
+    // Optional fields — ~85% chance each
+    const hasOps    = Math.random() > 0.15;
+    const hasHours  = Math.random() > 0.15;
+    const hasCoords = Math.random() > 0.1;
+
+    result.push({
+      kecamatanId:    prefix,
+      poiName:        poiName,
+      poiAddress:     `${street} No. ${houseNo}`,
+      poiTypeId:      poiTypeId,
+      operationalDay: hasOps    ? rand(OPERATIONAL_OPTIONS) : null,
+      avgOpenHour:    hasHours  ? rand(OPEN_HOUR_OPTIONS)   : null,
+      avgClosedHour:  hasHours  ? rand(CLOSE_HOUR_OPTIONS)  : null,
+      longitude:      hasCoords ? parseFloat((meta.lng + (Math.random() * 0.04 - 0.02)).toFixed(6)) : null,
+      latitude:       hasCoords ? parseFloat((meta.lat + (Math.random() * 0.04 - 0.02)).toFixed(6)) : null,
+    });
+  }
+  return result;
+}
+
+// ─── Sequence Reset ───────────────────────────────────────────────────────────
 
 async function resetSequence(tableName: string) {
   await db.execute(
@@ -209,10 +245,14 @@ async function resetSequence(tableName: string) {
   );
 }
 
+// ─── Main ─────────────────────────────────────────────────────────────────────
+
 async function main() {
   try {
     console.log("[SEED] Starting database seed...");
 
+    // Delete in dependency order (fact tables first)
+    await db.delete(surveyorPoiFact);
     await db.delete(surveyorPopulationFact);
     await db.delete(poiTypeMaster);
     await db.delete(foodPreferencesMaster);
@@ -225,6 +265,7 @@ async function main() {
     await db.delete(maritalStatusMaster);
     await db.delete(genderMaster);
 
+    // Master data
     await db.insert(genderMaster).values(masterSeedData.gender);
     await db.insert(maritalStatusMaster).values(masterSeedData.maritalStatus);
     await db.insert(occupationStatusMaster).values(masterSeedData.occupationStatus);
@@ -236,9 +277,16 @@ async function main() {
     await db.insert(foodPreferencesMaster).values(masterSeedData.foodPreferences);
     await db.insert(poiTypeMaster).values(masterSeedData.poiTypes);
 
+    // Fact tables
     const populationFacts = buildPopulationFacts();
     await db.insert(surveyorPopulationFact).values(populationFacts);
+    console.log(`[SEED] Inserted ${populationFacts.length} population fact records.`);
 
+    const poiFacts = buildPoiFacts();
+    await db.insert(surveyorPoiFact).values(poiFacts);
+    console.log(`[SEED] Inserted ${poiFacts.length} POI fact records.`);
+
+    // Reset sequences
     await Promise.all([
       resetSequence("gender_master"),
       resetSequence("marital_status_master"),
@@ -251,9 +299,9 @@ async function main() {
       resetSequence("food_preferences_master"),
       resetSequence("poi_type_master"),
       resetSequence("surveyor_population_fact"),
+      resetSequence("surveyor_poi_fact"),
     ]);
 
-    console.log(`[SEED] Inserted ${populationFacts.length} fact records.`);
     console.log("[SEED] Database seed completed successfully!");
   } catch (error) {
     console.error("[SEED] Seed failed:", error);

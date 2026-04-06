@@ -18,6 +18,8 @@ import { IncomeChart } from "@/components/dashboard/income-chart";
 import { FoodExpenditureChart } from "@/components/dashboard/food-expenditure-chart";
 import { POISummary } from "@/components/dashboard/poi-summary";
 import { Footer } from "@/components/footer";
+import { useDemographics } from "@/hooks/user-demographics";
+import { useCities, City } from "@/hooks/use-cities";
 
 const defaultFilters: FilterState = {
   selectedCities: [],
@@ -34,35 +36,21 @@ const defaultFilters: FilterState = {
 
 export default function DashboardPage() {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
-  const [selectedCity, setSelectedCity] = useState<number | null>(null);
-  const [cities, setCities] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
 
-  // Fetch cities on mount
+  const { data: demographics, isLoading: isDemographicsLoading } =
+    useDemographics(selectedCity?.id ?? undefined);
+  const { data: cities, isLoading: isCitiesLoading } = useCities();
+
   useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await fetch("/api/cities");
-        const data = await response.json();
-        setCities(data.cities || []);
-
-        // Set first city as default
-        if (data.cities && data.cities.length > 0) {
-          setSelectedCity(data.cities[0].id);
-          setFilters((prev) => ({
-            ...prev,
-            selectedCities: [data.cities[0].id],
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to fetch cities:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCities();
-  }, []);
+    if (cities?.cities?.length > 0 && selectedCity == null) {
+      setSelectedCity(cities.cities[0]);
+      setFilters((prev) => ({
+        ...prev,
+        selectedCities: [cities.cities[0].id],
+      }));
+    }
+  }, [cities, selectedCity]);
 
   const updateFilter = (key: keyof FilterState, values: any[]) => {
     setFilters((prev) => ({
@@ -73,11 +61,11 @@ export default function DashboardPage() {
 
   const clearFilters = () => {
     setFilters(defaultFilters);
-    if (cities.length > 0) {
-      setSelectedCity(cities[0].id);
+    if (cities.cities.length > 0) {
+      setSelectedCity(cities.cities[0]);
       setFilters((prev) => ({
         ...prev,
-        selectedCities: [cities[0].id],
+        selectedCities: [cities.cities[0].id],
       }));
     }
   };
@@ -93,7 +81,7 @@ export default function DashboardPage() {
     isFilterActive,
   };
 
-  if (isLoading) {
+  if (isCitiesLoading || isDemographicsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -113,17 +101,23 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {/* City Info */}
-          {selectedCity && cities.length > 0 && (
-            <CityInfo cityId={selectedCity} />
+          {selectedCity && (
+            <CityInfo
+              city={selectedCity}
+              isLoading={cities?.cities?.length === 0}
+            />
           )}
 
           {/* Filter Controls */}
           <div className="mt-8 mb-8">
             <FilterControls
-              cities={cities}
-              selectedCityId={selectedCity}
+              cities={cities?.cities}
+              selectedCityId={selectedCity?.id}
               onCityChange={(cityId) => {
-                setSelectedCity(cityId);
+                setSelectedCity(
+                  cities?.cities.find((city: City) => city.id === cityId) ||
+                    null,
+                );
                 updateFilter("selectedCities", [cityId]);
               }}
               isFilterActive={isFilterActive}
@@ -139,44 +133,59 @@ export default function DashboardPage() {
               transition={{ duration: 0.4 }}
               className="mb-8"
             >
-              <MapChart cityId={selectedCity} />
+              <MapChart data={demographics?.demographics} />
             </motion.div>
           )}
 
           {/* Demographics Summary & Gender Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.1 }}
             >
-              <DemographicsSummary cityId={selectedCity} />
+              <DemographicsSummary
+                data={demographics?.demographics}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
-              
             >
-              <GenderChart cityId={selectedCity} />
+              <GenderChart
+                data={demographics?.genderBreakdown}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
           </div>
 
           {/* Marital Status & Occupation Status Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.3 }}
             >
-              <MaritalStatusChart cityId={selectedCity} />
+              <MaritalStatusChart
+                data={demographics?.maritalStatusBreakdown}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.4 }}
             >
-              <OccupationStatusChart cityId={selectedCity} />
+              <OccupationStatusChart
+                data={demographics?.occupationStatusBreakdown}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
           </div>
 
@@ -187,7 +196,10 @@ export default function DashboardPage() {
             transition={{ duration: 0.4, delay: 0.5 }}
             className="mb-8"
           >
-            <JobOccupationChart cityId={selectedCity} />
+            <JobOccupationChart
+              data={demographics?.jobOccupations}
+              isLoading={isDemographicsLoading}
+            />
           </motion.div>
 
           {/* Age Group Chart - Full Width */}
@@ -197,31 +209,46 @@ export default function DashboardPage() {
             transition={{ duration: 0.4, delay: 0.6 }}
             className="mb-8"
           >
-            <AgeGroupChart cityId={selectedCity} />
+            <AgeGroupChart
+              data={demographics?.ageGroupData || []}
+              isLoading={isDemographicsLoading}
+            />
           </motion.div>
 
           {/* Socioeconomic, Income & Food Expenditure Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.7 }}
             >
-              <SocioeconomicChart cityId={selectedCity} />
+              <SocioeconomicChart
+                data={demographics?.socioeconomicData || []}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.8 }}
             >
-              <IncomeChart cityId={selectedCity} />
+              <IncomeChart
+                data={demographics?.incomeData || []}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
             <motion.div
+              className="h-full"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.9 }}
             >
-              <FoodExpenditureChart cityId={selectedCity} />
+              <FoodExpenditureChart
+                data={demographics?.foodExpenditureData || []}
+                isLoading={isDemographicsLoading}
+              />
             </motion.div>
           </div>
 
@@ -232,7 +259,10 @@ export default function DashboardPage() {
             transition={{ duration: 0.4, delay: 1 }}
             className="mb-8"
           >
-            <POISummary cityId={selectedCity} />
+            <POISummary
+              data={demographics?.pointsOfInterest ?? []}
+              isLoading={isDemographicsLoading}
+            />
           </motion.div>
         </div>
 

@@ -1,113 +1,164 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ReactECharts from "echarts-for-react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const GENERATION_COLORS: { [key: string]: string } = {
-  'Gen Alpha': '#f9c5d5',
-  'Gen Z': '#c7ceea',
-  Millennials: '#b5ead7',
-  'Gen X': '#f6d6ad',
-  Boomers: '#d9c6f3',
-};
-
-interface AgeGroupChartProps {
-  cityId: number | null;
+interface Props {
+  data: {
+    ageGroup: string;
+    generation: string;
+    value: number;
+  }[];
+  isLoading: boolean;
 }
 
-const AGE_ORDER = ['0-5','6-10','11-15','16-20','21-25','26-30','31-35','36-40','41-45','46-50','51-55','56-60','60+'];
+const AGE_ORDER = [
+  "0-5",
+  "6-10",
+  "11-15",
+  "16-20",
+  "21-25",
+  "26-30",
+  "31-35",
+  "36-40",
+  "41-45",
+  "46-50",
+  "51-55",
+  "56-60",
+  "60+",
+];
 
-export function AgeGroupChart({ cityId }: AgeGroupChartProps) {
-  const [data, setData] = useState<any[]>([]);
+const GENERATIONS = [
+  "Gen Alpha",
+  "Gen Z",
+  "Millennials",
+  "Gen X",
+  "Boomer II",
+  "Boomer I",
+];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!cityId) return;
+const BASE_COLORS: Record<string, string> = {
+  "Gen Alpha": "#7c3aed", // ungu
+  "Gen Z": "#16a34a", // ijo
+  Millennials: "#2563eb", // biru
+  "Gen X": "#eab308", // kuning
+  "Boomer II": "#dc2626", // merah
+  "Boomer I": "#7f1d1d", // maroon
+};
 
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
+function shadeColor(hex: string, percent: number) {
+  const num = parseInt(hex.replace("#", ""), 16);
+  let r = (num >> 16) + percent;
+  let g = ((num >> 8) & 0x00ff) + percent;
+  let b = (num & 0x0000ff) + percent;
 
-        if (result.ageGroupData && result.ageGroupData.length > 0) {
-          const grouped = result.ageGroupData.reduce((acc: any[], item: any) => {
-            const existing = acc.find((entry) => entry.ageGroup === item.ageGroup);
-            if (existing) {
-              existing[item.generation] = item.value;
-            } else {
-              acc.push({
-                ageGroup: item.ageGroup,
-                [item.generation]: item.value,
-              });
-            }
-            return acc;
-          }, []);
+  r = Math.max(Math.min(255, r), 0);
+  g = Math.max(Math.min(255, g), 0);
+  b = Math.max(Math.min(255, b), 0);
 
-          setData(grouped);
-        } else {
-          setData([]);
-        }
-      } catch (error) {
-        console.error('Failed to fetch age group data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [cityId]);
+  return `rgb(${r}, ${g}, ${b})`;
+}
 
+export function AgeGroupChart({ data = [], isLoading }: Props) {
   if (isLoading) {
-    return (
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Kelompok Usia & Generasi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96 rounded-lg bg-muted animate-pulse" />
-        </CardContent>
-      </Card>
-    );
+    return <div className="h-96 bg-muted animate-pulse rounded-lg" />;
   }
 
+  // 🔥 reshape data (IMPORTANT)
+  const dataset = AGE_ORDER.map((age) => {
+    const row: any = { ageGroup: age };
+
+    GENERATIONS.forEach((gen) => {
+      const found = data.find(
+        (d) => d.ageGroup === age && d.generation === gen,
+      );
+      row[gen] = found?.value ?? 0;
+    });
+
+    return row;
+  });
+
+  const option = {
+    animation: true,
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: (params: any) => {
+        const total = params.reduce((sum: number, p: any) => sum + p.value, 0);
+
+        let html = `<b>${params[0].axisValue}</b><br/>`;
+        params.forEach((p: any) => {
+          const percent = total ? ((p.value / total) * 100).toFixed(1) : 0;
+          html += `${p.marker} ${p.seriesName}: ${p.value.toLocaleString("id-ID")} (${percent}%)<br/>`;
+        });
+
+        html += `<hr/>Total: ${total.toLocaleString("id-ID")}`;
+        return html;
+      },
+    },
+
+    legend: {
+      bottom: 0,
+      itemWidth: 12,
+      itemHeight: 12,
+    },
+
+    grid: {
+      left: 20,
+      right: 20,
+      top: 20,
+      bottom: 80,
+    },
+
+    xAxis: {
+      type: "category",
+      data: AGE_ORDER,
+      axisLabel: {
+        rotate: 30,
+      },
+    },
+
+    yAxis: {
+      type: "value",
+    },
+
+    series: GENERATIONS.map((gen) => ({
+      name: gen,
+      type: "bar",
+      stack: "total",
+      emphasis: { focus: "series" },
+
+      data: dataset.map((d, idx) => ({
+        value: d[gen],
+
+        itemStyle: {
+          color: shadeColor(
+            BASE_COLORS[gen],
+            (idx - AGE_ORDER.length / 2) * 8, // 🔥 younger brighter, older darker
+          ),
+        },
+      })),
+    })),
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Card className="border-border/50 shadow-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Card className="flex flex-col">
         <CardHeader>
-          <CardTitle className="text-base">Kelompok Usia & Generasi</CardTitle>
+          <CardTitle>Distribusi Usia & Generasi</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={380}>
-            <BarChart data={data} margin={{ top: 20, right: 30, left: 10, bottom: 30 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="ageGroup" stroke="var(--muted-foreground)" interval={0} angle={-25} textAnchor="end" height={60} />
-              <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '12px',
-                }}
-                labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
-              />
-              <Legend />
-              {Object.keys(GENERATION_COLORS).map((generation) => (
-                <Bar
-                  key={generation}
-                  dataKey={generation}
-                  stackId="a"
-                  fill={GENERATION_COLORS[generation]}
-                  radius={[10, 10, 0, 0]}
-                />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Distribusi umur dibentuk langsung dari tabel fact memakai bucket usia.
-          </p>
+
+        <CardContent className="h-105">
+          <ReactECharts
+            option={option}
+            style={{ height: "100%", width: "100%" }}
+          />
         </CardContent>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Distribusi umur per 5 tahun dengan segmentasi generasi
+        </p>
       </Card>
     </motion.div>
   );

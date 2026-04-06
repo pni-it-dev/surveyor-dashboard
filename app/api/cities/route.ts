@@ -4,24 +4,27 @@ import { sql } from "drizzle-orm";
 
 const AREA_METADATA: Record<
   string,
-  { address: string; latitude: number; longitude: number; palette: string[] }
+  { name: string; address: string; latitude: number; longitude: number; palette: string[] }
 > = {
-  "Kebayoran Baru": {
-    address: "Jakarta Selatan, DKI Jakarta",
-    latitude: -6.2447,
-    longitude: 106.8003,
+  "351516": {
+    name: "Gedangan",
+    address: "Kab. Sidoarjo, Jawa Timur",
+    latitude: -7.3805,
+    longitude: 112.7197,
     palette: ["#f9c5d5", "#f8d49d", "#c7ceea"],
   },
-  Gubeng: {
+  "357808": {
+    name: "Gubeng",
     address: "Kota Surabaya, Jawa Timur",
     latitude: -7.2819,
     longitude: 112.7578,
     palette: ["#b5ead7", "#c7ceea", "#f6d6ad"],
   },
-  Coblong: {
-    address: "Kota Bandung, Jawa Barat",
-    latitude: -6.8867,
-    longitude: 107.6186,
+  "357302": {
+    name: "Klojen",
+    address: "Kota Malang, Jawa Timur",
+    latitude: -7.9825,
+    longitude: 112.6308,
     palette: ["#c7ceea", "#ffdac1", "#e2f0cb"],
   },
 };
@@ -30,32 +33,34 @@ export async function GET() {
   try {
     const result = (await db.execute(sql`
       SELECT
-        MIN(id)::int AS id,
-        kecamatan AS name,
-        kabkot_id::int AS kabkot_id,
+        LEFT(no_kk, 6) AS prefix,
+        kg.geojson AS geojson,
         COUNT(*)::int AS respondent_count,
-        COALESCE(SUM(jumlah_anggota), 0)::int AS total_population
+        COUNT(DISTINCT no_kk)::int AS total_households
       FROM surveyor_population_fact
-      GROUP BY kecamatan, kabkot_id
-      ORDER BY kecamatan ASC
+      LEFT JOIN kecamatan_geojson kg ON LEFT(no_kk, 6) = kg.code::text
+      GROUP BY LEFT(no_kk, 6), kg.geojson
+      ORDER BY LEFT(no_kk, 6) ASC
     `)) as { rows: Array<Record<string, unknown>> };
 
     const cities = result.rows.map((row) => {
-      const name = String(row.name);
-      const metadata = AREA_METADATA[name] ?? {
-        address: `Kab/Kota ${row.kabkot_id}`,
-        latitude: -6.2,
-        longitude: 106.8,
+      const prefix = String(row.prefix);
+      const metadata = AREA_METADATA[prefix] ?? {
+        name: prefix,
+        address: `Kecamatan ${prefix}`,
+        latitude: -7.0,
+        longitude: 112.7,
         palette: ["#f9c5d5", "#c7ceea", "#b5ead7"],
       };
 
       return {
-        id: Number(row.id),
-        name,
+        id: prefix,
+        name: metadata.name,
         address: metadata.address,
-        kabkotId: Number(row.kabkot_id),
+        geojson: row.geojson !== null ? JSON.parse(String(row.geojson)) : null,
         respondentCount: Number(row.respondent_count),
-        totalPopulation: Number(row.total_population),
+        totalPopulation: Number(row.respondent_count),
+        totalHouseholds: Number(row.total_households),
         latitude: metadata.latitude,
         longitude: metadata.longitude,
         palette: metadata.palette,

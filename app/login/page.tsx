@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,15 +89,18 @@ export default function LoginPage() {
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="space-y-2 text-center">
             <div className="flex justify-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-                <span className="text-2xl font-bold text-primary-foreground">
-                  T
-                </span>
-              </div>
+              <Image
+                src="/farina-logo.png"
+                alt="Primaboga Logo"
+                width={80}
+                height={80}
+                className="h-20 w-auto object-contain"
+                priority
+              />
             </div>
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl">Primaboga Trade Analysis</CardTitle>
             <CardDescription>
-              Sign in to access the Trade Area Analysis dashboard
+              Sign in to access the dashboard — PT. Primaboga Nusantara Inti
             </CardDescription>
           </CardHeader>
 
@@ -197,7 +201,7 @@ export default function LoginPage() {
           transition={{ delay: 0.4, duration: 0.4 }}
           className="mt-4 text-center text-xs text-muted-foreground"
         >
-          By logging in, you agree to our Terms of Service
+          © {new Date().getFullYear()} PT. Primaboga Nusantara Inti. All rights reserved.
         </motion.p>
       </motion.div>
     </div>

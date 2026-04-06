@@ -1,92 +1,87 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useFilters } from '@/lib/filter-context';
+import ReactECharts from "echarts-for-react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFilters } from "@/lib/filter-context";
 
-const COLORS = ['#b5ead7', '#c7ceea', '#f6d6ad', '#f9c5d5', '#d9c6f3'];
-
-interface OccupationStatusChartProps {
-  cityId: number | null;
+interface Props {
+  data: { name: string; value: number }[];
+  isLoading: boolean;
 }
 
-export function OccupationStatusChart({ cityId }: OccupationStatusChartProps) {
+export function OccupationStatusChart({ data = [], isLoading }: Props) {
   const { filters, updateFilter } = useFilters();
-  const [data, setData] = useState<any[]>([]);
-  const total = useMemo(() => data.reduce((sum, d) => sum + Number(d.value || 0), 0), [data]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!cityId) return;
+  const total = data.reduce((a, b) => a + b.value, 0);
 
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-        setData(result.occupationStatusBreakdown ?? []);
-      } catch (error) {
-        console.error('Failed to fetch occupation status data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [cityId]);
+  const handleClick = (params: any) => {
+    const name = params.name;
 
-  const handlePieClick = (entry: any) => {
-    const newStatuses = filters.selectedOccupationStatus.includes(entry.name)
-      ? filters.selectedOccupationStatus.filter((status) => status !== entry.name)
-      : [...filters.selectedOccupationStatus, entry.name];
-    updateFilter('selectedOccupationStatus', next);
+    const next = filters.selectedOccupationStatus.includes(name)
+      ? filters.selectedOccupationStatus.filter((s) => s !== name)
+      : [...filters.selectedOccupationStatus, name];
+
+    updateFilter("selectedOccupationStatus", next);
   };
 
-  if (isLoading) {
-    return (
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Status Pekerjaan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80 rounded-lg bg-muted animate-pulse" />
-        </CardContent>
-      </Card>
-    );
-  }
+  const option = {
+    tooltip: {
+      trigger: "item",
+      formatter: (p: any) => {
+        const percent = ((p.value / total) * 100).toFixed(1);
+        return `${p.name}<br/>${p.value.toLocaleString("id-ID")} (${percent}%)`;
+      },
+    },
+    legend: { bottom: 0, type: "scroll" },
+
+    series: [
+      {
+        name: "Occupation",
+        type: "pie",
+        radius: ["40%", "80%"],
+
+        data: data.map((d) => {
+          const isSelected = filters.selectedOccupationStatus.includes(d.name);
+          const dim =
+            filters.selectedOccupationStatus.length > 0 && !isSelected;
+
+          return {
+            ...d,
+            itemStyle: {
+              opacity: dim ? 0.3 : 1,
+            },
+          };
+        }),
+
+        label: {
+          show: true,
+          formatter: (p: any) => {
+            const percent = ((p.value / total) * 100).toFixed(1);
+            return `${p.name}\n${percent}%`;
+          },
+        },
+
+        emphasis: {
+          scale: true,
+        },
+      },
+    ],
+  };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Status Pekerjaan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={320}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name }) => name}
-                outerRadius={88}
-                dataKey="value"
-                onClick={(entry) => handlePieClick(entry)}
-                cursor="pointer"
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value: any) => Number(value).toLocaleString('id-ID')} />
-            </PieChart>
-          </ResponsiveContainer>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Klik potongan chart untuk filter status pekerjaan.
-          </p>
-        </CardContent>
-      </Card>
-    </motion.div>
+    <Card className="h-full flex flex-col">
+      <CardHeader>
+        <CardTitle>Status Pekerjaan</CardTitle>
+      </CardHeader>
+
+      <CardContent className="flex-1 min-h-60">
+        <ReactECharts
+          option={option}
+          style={{ height: "100%" }}
+          onEvents={{ click: handleClick }}
+        />
+      </CardContent>
+    </Card>
   );
 }

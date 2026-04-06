@@ -1,97 +1,162 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useFilters } from '@/lib/filter-context';
+import { motion } from "framer-motion";
+import ReactECharts from "echarts-for-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useFilters } from "@/lib/filter-context";
 
 interface GenderChartProps {
-  cityId: number | null;
+  data: {
+    name: string;
+    value: number;
+  }[];
+  isLoading: boolean;
 }
 
 const COLOR_MAP: Record<string, string> = {
-  'LAKI LAKI': '#2563eb',
-  'PEREMPUAN': '#ec4899',
+  "LAKI LAKI": "#2563eb",
+  PEREMPUAN: "#ec4899",
 };
 
-export function GenderChart({ cityId }: GenderChartProps) {
+export function GenderChart({ data = [], isLoading }: GenderChartProps) {
   const { filters, updateFilter } = useFilters();
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!cityId) return;
+  const handleClick = (params: any) => {
+    const name = params.name;
 
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-        setData(result.genderBreakdown ?? []);
-      } catch (error) {
-        console.error('Failed to fetch gender data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, [cityId]);
+    const newGenders = filters.selectedGenders.includes(name)
+      ? filters.selectedGenders.filter((g) => g !== name)
+      : [...filters.selectedGenders, name];
 
-  const total = useMemo(() => data.reduce((sum, item) => sum + Number(item.value || 0), 0), [data]);
-
-  const handleBarClick = (entry: any) => {
-    const newGenders = filters.selectedGenders.includes(entry.name)
-      ? filters.selectedGenders.filter((g) => g !== entry.name)
-      : [...filters.selectedGenders, entry.name];
-    updateFilter('selectedGenders', newGenders);
+    updateFilter("selectedGenders", newGenders);
   };
 
   if (isLoading) {
     return (
-      <Card className="border-border/50 shadow-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-base">Komposisi Gender</CardTitle>
+          <CardTitle>Komposisi Gender</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 rounded-lg bg-muted animate-pulse" />
+          <div className="h-80 bg-muted animate-pulse rounded-lg" />
         </CardContent>
       </Card>
     );
   }
 
+  const sortedData = [...data].sort((a, b) => b.value - a.value);
+
+  const total = sortedData.reduce((acc, d) => acc + d.value, 0);
+
+  const option = {
+    animation: true,
+    animationDuration: 600,
+
+    tooltip: {
+      trigger: "item",
+      formatter: (params: any) => {
+        const percent = ((params.value / total) * 100).toFixed(1);
+        return `
+        <b>${params.name}</b><br/>
+        ${params.value.toLocaleString("id-ID")} (${percent}%)
+      `;
+      },
+    },
+
+    legend: {
+      show: true,
+      bottom: 0,
+      textStyle: { color: "#aaa" },
+    },
+
+    grid: {
+      left: "5%",
+      right: "5%",
+      top: "10%",
+      bottom: "15%",
+      containLabel: true,
+    },
+
+    xAxis: {
+      type: "value",
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: {
+        lineStyle: {
+          type: "dashed",
+          opacity: 0.15,
+        },
+      },
+    },
+
+    yAxis: {
+      type: "category",
+      data: sortedData.map((d) => d.name),
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+
+    series: [
+      {
+        name: "Total Populasi",
+        type: "bar",
+        barWidth: 26,
+
+        data: sortedData.map((d) => {
+          const isSelected = filters.selectedGenders.includes(d.name);
+          const isDimmed = filters.selectedGenders.length > 0 && !isSelected;
+
+          return {
+            value: d.value,
+            name: d.name,
+            itemStyle: {
+              color: COLOR_MAP[d.name] || "#888",
+              opacity: isDimmed ? 0.3 : 1,
+            },
+          };
+        }),
+
+        label: {
+          show: true,
+          position: "right",
+          fontSize: 12,
+          color: "#ddd",
+          formatter: (params: any) => {
+            const percent = ((params.value / total) * 100).toFixed(1);
+            return `${params.value.toLocaleString("id-ID")} (${percent}%)`;
+          },
+        },
+
+        emphasis: {
+          focus: "self",
+          itemStyle: {
+            opacity: 1,
+          },
+        },
+      },
+    ],
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Card className="border-border/50 shadow-sm backdrop-blur">
+    <motion.div
+      className="h-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <Card className="h-full flex flex-col">
         <CardHeader>
-          <CardTitle className="text-base">Komposisi Gender</CardTitle>
+          <CardTitle>Komposisi Gender</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data} layout="vertical" margin={{ top: 10, right: 40, left: 20, bottom: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" stroke="var(--muted-foreground)" />
-              <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '12px',
-                }}
-                labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
-              />
-              <Bar
-                dataKey="value"
-                fill="var(--chart-1)"
-                onClick={(barData) => handleBarClick(barData)}
-                cursor="pointer"
-                radius={[10, 10, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Klik batang chart untuk aktifkan filter gender.
+        <CardContent className="flex-1">
+          <ReactECharts
+            option={option}
+            style={{ height: "100%" }}
+            onEvents={{
+              click: handleClick,
+            }}
+          />
+          <p className="text-center text-xs text-muted-foreground">
+            Klik bar untuk filter gender
           </p>
         </CardContent>
       </Card>

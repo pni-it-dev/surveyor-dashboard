@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import {
   DropdownMenu,
@@ -40,7 +41,7 @@ export function Navbar({ user }: NavbarProps) {
 
       // Add title
       doc.setFontSize(20);
-      doc.text('Trade Area Analysis Report', 14, 15);
+      doc.text('Primaboga Trade Analysis Dashboard', 14, 15);
 
       // Add generation date
       doc.setFontSize(10);
@@ -61,7 +62,7 @@ export function Navbar({ user }: NavbarProps) {
         pageHeight - 10
       );
 
-      doc.save('trade-area-analysis-report.pdf');
+      doc.save('primaboga-trade-analysis-report.pdf');
     } catch (error) {
       console.error('[PDF DOWNLOAD ERROR]', error);
     }
@@ -100,12 +101,17 @@ export function Navbar({ user }: NavbarProps) {
           {/* Logo */}
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                <span className="text-lg font-bold text-primary-foreground">T</span>
-              </div>
+              <Image
+                src="/farina-logo.png"
+                alt="Farina Logo"
+                width={40}
+                height={40}
+                className="h-10 w-auto object-contain"
+                priority
+              />
               <div className="hidden sm:flex flex-col">
-                <span className="font-bold text-foreground">Trade Area</span>
-                <span className="text-xs text-muted-foreground">Analysis Report</span>
+                <span className="font-bold text-foreground text-sm leading-tight">Primaboga Trade</span>
+                <span className="text-xs text-muted-foreground leading-tight">Analysis Dashboard</span>
               </div>
             </div>
 
@@ -134,8 +140,14 @@ export function Navbar({ user }: NavbarProps) {
                   variant="ghost"
                   className="gap-2 text-sm font-medium"
                 >
-                  <div className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    {user.email?.charAt(0).toUpperCase() || 'U'}
+                  <div className="hidden sm:flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary overflow-hidden border border-border/50">
+                    <Image
+                      src="/placeholder-user.jpg"
+                      alt="User Avatar"
+                      width={32}
+                      height={32}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <span className="hidden sm:inline">{user.name || user.email || 'Account'}</span>
                   <svg

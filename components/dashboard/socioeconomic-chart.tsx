@@ -1,92 +1,90 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { useFilters } from '@/lib/filter-context';
+import ReactECharts from "echarts-for-react";
+import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const COLORS = ['#dc2828', '#f97316', '#eab308', '#14b8a6', '#2563eb'];
+interface Props {
+  data: {
+    name: string;
+    value: number;
+  }[];
+  isLoading?: boolean;
+}
 
-interface SocioeconomicChartProps { cityId: number | null; }
+export function SocioeconomicChart({ data = [], isLoading }: Props) {
+  const sorted = useMemo(
+    () => [...data].sort((a, b) => b.value - a.value),
+    [data],
+  );
 
-export function SocioeconomicChart({ cityId }: SocioeconomicChartProps) {
-  const { filters, updateFilter } = useFilters();
-  const [data, setData] = useState<any[]>([]);
-  const total = useMemo(() => data.reduce((s, d) => s + Number(d.value || 0), 0), [data]);
-
-  useEffect(() => {
-    const load = async () => {
-      if (!cityId) return;
-
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/demographics?cityId=${cityId}`);
-        const result = await response.json();
-        setData(result.socioeconomicData ?? []);
-      } catch (error) {
-        console.error('Failed to fetch socioeconomic data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
-  }, [cityId]);
-
-  const handleBarClick = (entry: any) => {
-    const newCategories = filters.selectedSocioeconomic.includes(entry.name)
-      ? filters.selectedSocioeconomic.filter((category) => category !== entry.name)
-      : [...filters.selectedSocioeconomic, entry.name];
-
-    updateFilter('selectedSocioeconomic', newCategories);
-  };
+  const total = useMemo(
+    () => sorted.reduce((s, d) => s + d.value, 0),
+    [sorted],
+  );
 
   if (isLoading) {
-    return (
-      <Card className="border-border/50 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-base">Kelas Sosial Ekonomi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-80 rounded-lg bg-muted animate-pulse" />
-        </CardContent>
-      </Card>
-    );
+    return <div className="h-90 bg-muted animate-pulse rounded-lg" />;
   }
 
+  const option = {
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: (params: any) => {
+        const p = params[0];
+        const percent = total ? ((p.value / total) * 100).toFixed(1) : 0;
+
+        return `<b>${p.name}</b><br/>${p.value.toLocaleString("id-ID")} (${percent}%)`;
+      },
+    },
+
+    grid: {
+      left: 8,
+      right: 16,
+      top: 20,
+      bottom: 10,
+      containLabel: true, // 🔥 WAJIB
+    },
+
+    xAxis: {
+      type: "category",
+      data: sorted.map((d) => d.name),
+      axisLabel: {
+        rotate: 50, // penting biar ga tabrakan
+      },
+    },
+
+    yAxis: {
+      type: "value",
+    },
+
+    series: [
+      {
+        type: "bar",
+        data: sorted.map((d, i) => ({
+          value: d.value,
+          itemStyle: {
+            color: ["#dc2626", "#f97316", "#eab308", "#14b8a6", "#2563eb"][
+              i % 5
+            ],
+          },
+        })),
+        barMaxWidth: 40,
+      },
+    ],
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <Card className="border-border/50 shadow-sm">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Card>
         <CardHeader>
-          <CardTitle className="text-base">Kelas Sosial Ekonomi</CardTitle>
+          <CardTitle>Kelas Sosial Ekonomi</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="name" stroke="var(--muted-foreground)" angle={-35} textAnchor="end" height={72} />
-              <YAxis stroke="var(--muted-foreground)" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '12px',
-                }}
-                labelStyle={{ color: 'var(--foreground)' }}
-                formatter={(value: any) => Number(value).toLocaleString('id-ID')}
-              />
-              <Bar
-                dataKey="value"
-                fill="var(--chart-3)"
-                onClick={(barData) => handleBarClick(barData)}
-                cursor="pointer"
-                radius={[10, 10, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Klik batang untuk filter kelas sosial ekonomi.
-          </p>
+
+        <CardContent className="h-90">
+          <ReactECharts option={option} style={{ height: "100%" }} />
         </CardContent>
       </Card>
     </motion.div>

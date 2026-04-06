@@ -109,12 +109,33 @@ export const poiTypeMaster = pgTable("poi_type_master", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+export const surveyorPoiFact = pgTable(
+  "surveyor_poi_fact",
+  {
+    id: serial("id").primaryKey(),
+    kecamatanId: varchar("kecamatan_id", { length: 6 }).notNull(),
+    poiName: varchar("poi_name", { length: 255 }).notNull(),
+    poiAddress: varchar("poi_address", { length: 500 }).notNull(),
+    poiTypeId: integer("poi_type_id").references(() => poiTypeMaster.id),
+    operationalDay: varchar("operational_day", { length: 100 }),
+    avgOpenHour: varchar("avg_open_hour", { length: 5 }),
+    avgClosedHour: varchar("avg_closed_hour", { length: 5 }),
+    longitude: real("longitude"),
+    latitude: real("latitude"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => ({
+    poiKecamatanIdx: index("surveyor_poi_fact_kecamatan_idx").on(table.kecamatanId),
+    poiTypeIdx: index("surveyor_poi_fact_poi_type_idx").on(table.poiTypeId),
+  }),
+);
+
 export const surveyorPopulationFact = pgTable(
   "surveyor_population_fact",
   {
     id: serial("id").primaryKey(),
     noKk: varchar("no_kk", { length: 50 }).notNull().unique(),
-    jumlahAnggota: integer("jumlah_anggota").notNull(),
+    namaAnggota: varchar("nama_anggota", { length: 255 }).notNull(),
     genderId: integer("gender_id")
       .notNull()
       .references(() => genderMaster.id),
@@ -122,8 +143,6 @@ export const surveyorPopulationFact = pgTable(
     housingStatusId: integer("housing_status_id")
       .notNull()
       .references(() => housingStatusMaster.id),
-    kecamatan: varchar("kecamatan", { length: 150 }).notNull(),
-    kabkotId: integer("kabkot_id").notNull(),
     maritalStatusId: integer("marital_status_id")
       .notNull()
       .references(() => maritalStatusMaster.id),
@@ -149,10 +168,6 @@ export const surveyorPopulationFact = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => ({
-    kecamatanIdx: index("surveyor_population_fact_kecamatan_idx").on(
-      table.kecamatan,
-    ),
-    kabkotIdx: index("surveyor_population_fact_kabkot_idx").on(table.kabkotId),
     genderIdx: index("surveyor_population_fact_gender_idx").on(table.genderId),
     maritalIdx: index("surveyor_population_fact_marital_idx").on(
       table.maritalStatusId,
@@ -174,3 +189,5 @@ export type FoodPreferencesMaster = typeof foodPreferencesMaster.$inferSelect;
 export type PoiTypeMaster = typeof poiTypeMaster.$inferSelect;
 export type SurveyorPopulationFact = typeof surveyorPopulationFact.$inferSelect;
 export type InsertSurveyorPopulationFact = typeof surveyorPopulationFact.$inferInsert;
+export type SurveyorPoiFact = typeof surveyorPoiFact.$inferSelect;
+export type InsertSurveyorPoiFact = typeof surveyorPoiFact.$inferInsert;
